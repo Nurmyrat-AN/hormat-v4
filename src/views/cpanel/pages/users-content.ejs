@@ -1,0 +1,43 @@
+<section id="users-page" data-view="grid" data-active="<%= t('cpanel.users.active') %>" data-inactive="<%= t('cpanel.users.inactive') %>" data-activate="<%= t('cpanel.users.activate') %>" data-deactivate="<%= t('cpanel.users.deactivate') %>" data-total="<%= total %>" data-actor-id="<%= actorId %>" data-capabilities="<%= JSON.stringify(capabilities) %>" data-csrf="<%= cpanelSession.csrf_token %>" data-failure="<%= t('cpanel.users.failure') %>" data-self-deactivate="<%= t('cpanel.users.selfDeactivate') %>">
+ <div class="users-toolbar">
+  <div class="users-search">
+   <span class="users-search-icon" aria-hidden="true"><%- include('../partials/shell/icon',{name:'search'}) %></span>
+   <input class="form-control" id="users-search" type="search" placeholder="<%= t('cpanel.users.search') %>" aria-label="<%= t('cpanel.users.search') %>" autocomplete="off">
+   <button type="button" class="shell-icon-button" id="users-clear" hidden aria-label="<%= t('cpanel.users.clear') %>"><%- include('../partials/shell/icon',{name:'close'}) %></button>
+  </div>
+  <select class="form-select users-filter" id="users-field" aria-label="<%= t('cpanel.users.searchField') %>">
+   <option value="name"><%= t('cpanel.profile.fields.name') %></option><option value="all"><%= t('cpanel.users.allFields') %></option><option value="email"><%= t('cpanel.profile.fields.email') %></option><option value="phone"><%= t('cpanel.profile.fields.phone') %></option><option value="job"><%= t('cpanel.profile.fields.job') %></option>
+  </select>
+  <select class="form-select users-filter" id="users-status-filter" aria-label="<%= t('cpanel.users.status') %>">
+   <option value="active"><%= t('cpanel.users.active') %></option><option value="all"><%= t('cpanel.users.allStatuses') %></option><option value="inactive"><%= t('cpanel.users.inactive') %></option>
+  </select>
+  <div class="btn-group users-view" role="group" aria-label="<%= t('cpanel.users.view') %>">
+   <button type="button" class="btn btn-outline-secondary" data-users-view="grid" aria-pressed="true" title="<%= t('cpanel.users.grid') %>" aria-label="<%= t('cpanel.users.grid') %>"><%- include('../partials/shell/icon',{name:'grid'}) %></button>
+   <button type="button" class="btn btn-outline-secondary" data-users-view="list" aria-pressed="false" title="<%= t('cpanel.users.list') %>" aria-label="<%= t('cpanel.users.list') %>"><%- include('../partials/shell/icon',{name:'list'}) %></button>
+  </div>
+  <% if(capabilities.create) { %><button type="button" class="btn btn-success users-add" data-bs-toggle="modal" data-bs-target="#users-add"><%- include('../partials/shell/icon',{name:'plus'}) %><span><%= t('cpanel.users.add') %></span></button><% } %>
+ </div>
+ <p id="users-feedback" role="status" class="users-notice" hidden></p>
+ <div id="users-loading" role="status" hidden><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> <%= t('cpanel.users.loading') %></div>
+ <div id="users-results" aria-busy="false">
+  <div class="users-list-head" aria-hidden="true"><span><%= t('cpanel.users.user') %></span><span><%= t('cpanel.profile.fields.email') %></span><span><%= t('cpanel.profile.fields.phone') %></span><span><%= t('cpanel.profile.fields.job') %></span><span><%= t('cpanel.users.status') %></span><span><%= t('cpanel.users.actions') %></span></div>
+  <div class="users-items" role="list"></div>
+  <div id="users-empty" class="users-empty" hidden><%- include('../partials/shell/icon',{name:'users'}) %><h2 data-empty-users><%= t('cpanel.users.empty') %></h2><h2 data-empty-search><%= t('cpanel.users.noResults') %></h2></div>
+ </div>
+ <div id="users-pagination" class="users-pagination" hidden><button type="button" class="btn btn-outline-secondary btn-sm" data-page="previous"><%= t('cpanel.users.previous') %></button><span><%= t('cpanel.users.page') %> <span id="users-page-number"></span></span><button type="button" class="btn btn-outline-secondary btn-sm" data-page="next"><%= t('cpanel.users.next') %></button></div>
+ <template id="users-item-template"><article class="users-item" role="listitem">
+  <div class="users-identity"><span class="shell-avatar" aria-hidden="true"><span data-initials></span><img data-avatar alt="" referrerpolicy="no-referrer" hidden></span><div><h2 data-name></h2><span class="users-protected-badge" data-protected-label hidden><%= t('cpanel.users.superuser') %></span></div></div>
+  <div class="users-email"><span class="users-field-label"><%= t('cpanel.profile.fields.email') %></span><span data-email></span></div>
+  <div class="users-phone"><span class="users-field-label"><%= t('cpanel.profile.fields.phone') %></span><span data-phone></span></div>
+  <div class="users-job"><span class="users-field-label"><%= t('cpanel.profile.fields.job') %></span><span data-job></span></div>
+  <span class="users-status" data-status></span>
+  <div class="dropdown users-actions"><button type="button" class="shell-icon-button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<%= t('cpanel.users.actions') %>"><%- include('../partials/shell/icon',{name:'more'}) %></button><ul class="dropdown-menu dropdown-menu-end">
+   <li><button type="button" class="dropdown-item" data-user-action="status"><%= t('cpanel.users.changeStatus') %></button></li>
+   <li><button type="button" class="dropdown-item" data-user-action="edit"><%= t('cpanel.users.edit') %></button></li>
+   <li><button type="button" class="dropdown-item" data-user-action="password"><%= t('cpanel.profile.tabs.password') %></button></li>
+   <li data-protected-info hidden><span class="dropdown-item-text users-protected-info"><%= t('cpanel.users.protected') %></span></li>
+  </ul></div>
+ </article></template>
+ <script type="application/json" id="users-data"><%- JSON.stringify(rows).replace(/</g,'\\u003c') %></script>
+ <% for(const dialog of dialogs) { %><%- include('../partials/users/dialog',{dialog}) %><% } %>
+</section>

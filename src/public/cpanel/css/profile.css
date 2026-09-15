@@ -1,0 +1,21 @@
+.profile-card { max-width:880px; background:var(--shell-surface); border:1px solid var(--shell-border); border-radius:14px; overflow:hidden; }
+.profile-tabs { padding:12px 24px 0; border-color:var(--shell-border); gap:12px; }
+.profile-tabs .nav-link { color:var(--shell-muted); padding:16px 12px; border:0; border-bottom:3px solid transparent; background:transparent; }
+.profile-tabs .nav-link.active { color:var(--shell-accent); border-bottom-color:var(--shell-accent); background:transparent; font-weight:600; }
+.profile-content { padding:32px; }
+.profile-identity { display:flex; align-items:center; gap:20px; margin-bottom:32px; }
+.profile-avatar { width:80px; height:80px; font-size:26px; flex:none; }
+.profile-identity h2 { font-size:19px; margin-bottom:6px; overflow-wrap:anywhere; }
+.profile-identity p { color:var(--shell-muted); margin-bottom:12px; }
+.profile-fields { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.profile-card .form-label { font-size:13px; font-weight:500; }
+.profile-card .form-control { min-height:46px; background-color:var(--shell-surface); color:var(--shell-text); border-color:var(--shell-border); }
+.profile-card .form-control[readonly] { background-color:var(--shell-bg); color:var(--shell-muted); }
+.profile-action { margin-top:26px; min-height:44px; padding-inline:24px; }
+.profile-password-form { max-width:460px; }
+.profile-password-control { position:relative; }
+.profile-password-control input { padding-right:50px; }
+.profile-password-control button { position:absolute; right:3px; top:3px; }
+.profile-password-control svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.6; }
+.profile-notice { margin:20px 0 0; color:var(--shell-muted); font-size:13px; }
+@media(max-width:575px) { .profile-content { padding:22px 18px; }.profile-fields { grid-template-columns:1fr; gap:18px; }.profile-tabs { padding:8px 12px 0; gap:4px; }.profile-tabs .nav-link { padding:14px 8px; font-size:13px; }.profile-identity { align-items:flex-start; flex-direction:column; }.profile-action { width:100%; } }

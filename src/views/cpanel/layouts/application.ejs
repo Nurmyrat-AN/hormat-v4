@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="<%= language %>" data-bs-theme="light" data-sidebar="expanded" data-pinned="true">
+<head>
+  <%- include('../partials/head', { title: pageTitle, shellMode: true }) %>
+  <link rel="stylesheet" href="/public/cpanel/css/shell.css">
+  <% if ((typeof profilePage !== 'undefined' && profilePage) || (typeof usersPage !== 'undefined' && usersPage)) { %><link rel="stylesheet" href="/public/cpanel/css/profile.css"><link rel="stylesheet" href="/public/cpanel/css/media-uploader.css"><% } %>
+<% if(typeof usersPage !== 'undefined' && usersPage) { %><link rel="stylesheet" href="/public/cpanel/css/users.css"><% } %>
+  <% if(typeof permissionsPage !== 'undefined' && permissionsPage) { %><link rel="stylesheet" href="/public/cpanel/css/users.css"><link rel="stylesheet" href="/public/cpanel/css/permissions.css"><% } %>
+<% if(typeof mediaPage !== 'undefined' && mediaPage) { %><link rel="stylesheet" href="/public/cpanel/css/media-browser.css"><% } %>
+</head>
+<body class="cpanel-application" data-development="<%= isDevelopment %>">
+  <a class="shell-skip" href="#main-content"><%= t('cpanel.shell.skipContent') %></a>
+  <div class="cpanel-shell">
+    <%- include('../partials/shell/sidebar') %>
+    <div class="shell-workspace">
+      <%- include('../partials/shell/topbar') %>
+      <main id="main-content" class="shell-main" tabindex="-1">
+        <header class="shell-page-header">
+          <div><p class="shell-eyebrow"><%= t('cpanel.shell.workspace') %></p><h1><%= pageTitle %></h1>
+          <% if (typeof pageSubtitle !== 'undefined' && pageSubtitle) { %><p class="shell-subtitle"><%= pageSubtitle %></p><% } %></div>
+          <% if (typeof pageActions !== 'undefined' && pageActions.length) { %><div class="shell-page-actions"><% for (const action of pageActions) { %><% if(action.modalTarget) { %><button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="<%= action.modalTarget %>"><%- include('../partials/shell/icon',{name:action.icon}) %> <%= action.label %></button><% } else { %><a class="btn btn-outline-secondary" href="<%= action.href %>"><%= action.label %></a><% } %><% } %></div><% } %>
+        </header>
+        <%- include(contentPartial) %>
+      </main>
+      <footer class="shell-footer"><span><%= t('brand.name') %> · <%= t('cpanel.title') %></span><span class="shell-status-dot"><%= t('cpanel.shell.ready') %></span></footer>
+    </div>
+  </div>
+  <%- include('../partials/scripts') %>
+  <script src="/public/cpanel/js/shell/theme.js"></script>
+  <script src="/public/cpanel/js/shell/sidebar.js"></script>
+  <% if ((typeof profilePage !== 'undefined' && profilePage) || (typeof usersPage !== 'undefined' && usersPage)) { %>
+    <script src="/public/cpanel/js/password-visibility.js"></script>
+    <script src="/public/cpanel/js/media/uploader.js"></script>
+    <% if(typeof profilePage !== 'undefined' && profilePage) { %><script src="/public/cpanel/js/profile.js"></script><% } %>
+    <% if(typeof usersPage !== 'undefined' && usersPage) { %><script src="/public/cpanel/js/users.js"></script><% } %>
+  <% } %>
+  <% if(typeof permissionsPage !== 'undefined' && permissionsPage) { %><script src="/public/cpanel/js/permissions.js"></script><% } %>
+<% if(typeof mediaPage !== 'undefined' && mediaPage) { %><script src="/public/cpanel/js/media-browser.js"></script><% } %>
+</body>
+</html>

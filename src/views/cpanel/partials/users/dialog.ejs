@@ -1,0 +1,19 @@
+<div class="modal fade users-modal" id="users-<%= dialog.kind %>" tabindex="-1" aria-labelledby="users-<%= dialog.kind %>-title" data-kind="<%= dialog.kind %>">
+ <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable <%= dialog.avatar?'modal-lg':'' %>"><div class="modal-content">
+  <div class="modal-header"><h2 class="modal-title fs-5" id="users-<%= dialog.kind %>-title"><%= dialog.title %></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t('cpanel.users.close') %>"></button></div>
+  <div class="modal-body">
+   <% if(dialog.avatar) { %><%- include('../media/uploader',{uploader:{existingUrl:null,initials:'',name:null,subtitle:null}}) %><% } %>
+   <div class="users-selected" <%= dialog.kind==='add'?'hidden':'' %>><% if(!dialog.avatar) { %><span class="shell-avatar" aria-hidden="true"><span data-selected-initials></span><img data-selected-avatar alt="" hidden referrerpolicy="no-referrer"></span><% } %><div><strong data-selected-name></strong><p data-selected-email></p></div></div>
+   <form id="users-<%= dialog.kind %>-form" method="post" action="/cpanel/users" novalidate>
+    <div class="users-form-fields"><% for(const field of dialog.fields) { %><div><label class="form-label" for="users-<%= dialog.kind %>-<%= field.key %>"><%= field.label %></label><input class="form-control" id="users-<%= dialog.kind %>-<%= field.key %>" name="<%= field.key %>" type="<%= field.type %>" autocomplete="off"></div><% } %></div>
+    <% if(dialog.kind==='add') { %><label class="form-label mt-3" for="users-add-status"><%= t('cpanel.users.status') %></label><select class="form-select" id="users-add-status" name="status"><option value="active"><%= t('cpanel.users.active') %></option><option value="inactive"><%= t('cpanel.users.inactive') %></option></select><% } %>
+    <% if(dialog.password) { for(const field of [{key:'password',label:t('cpanel.profile.password.new')},{key:'confirm',label:t('cpanel.profile.password.confirm')}]) { %>
+     <label class="form-label mt-3" for="users-<%= dialog.kind %>-<%= field.key %>"><%= field.label %></label><div class="profile-password-control"><input class="form-control" id="users-<%= dialog.kind %>-<%= field.key %>" name="<%= field.key %>" type="password" autocomplete="new-password"><button class="shell-icon-button" type="button" data-password-toggle aria-controls="users-<%= dialog.kind %>-<%= field.key %>" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../login-icon',{name:'eye'}) %></span><span class="icon-hide" hidden><%- include('../login-icon',{name:'eye-off'}) %></span></button></div>
+    <% }} %>
+    <% if(dialog.kind==='status') { %><dl class="users-status-change"><div><dt><%= t('cpanel.users.currentStatus') %></dt><dd data-current-status></dd></div><div><dt><%= t('cpanel.users.newStatus') %></dt><dd data-new-status></dd></div></dl><% } %>
+   </form>
+   <p class="users-notice" data-operation-notice role="status" hidden></p>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><%= t('cpanel.users.cancel') %></button><button type="submit" form="users-<%= dialog.kind %>-form" class="btn btn-success" data-operation-submit disabled><%= dialog.action %></button></div>
+ </div></div>
+</div>

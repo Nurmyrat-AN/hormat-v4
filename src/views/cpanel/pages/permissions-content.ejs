@@ -1,0 +1,26 @@
+<section id="permissions-page" data-failure="<%= t('cpanel.permissions.loadFailed') %>">
+ <form id="permissions-search-form" class="users-toolbar" method="get" action="/cpanel/permissions">
+  <div class="users-search"><span class="users-search-icon" aria-hidden="true"><%- include('../partials/shell/icon',{name:'search'}) %></span><input class="form-control" id="permissions-search" name="query" type="search" maxlength="200" value="<%= query %>" placeholder="<%= t('cpanel.users.search') %>" aria-label="<%= t('cpanel.users.search') %>" autocomplete="off"></div>
+  <select class="form-select users-filter" id="permissions-status" name="status" aria-label="<%= t('cpanel.users.status') %>">
+   <option value="active" <%= status==='active'?'selected':'' %>><%= t('cpanel.users.active') %></option><option value="all" <%= status==='all'?'selected':'' %>><%= t('cpanel.users.allStatuses') %></option><option value="inactive" <%= status==='inactive'?'selected':'' %>><%= t('cpanel.users.inactive') %></option>
+  </select>
+  <button type="submit" class="btn btn-outline-secondary"><%= t('cpanel.navigation.search') %></button>
+  <a class="btn btn-link" href="/cpanel/permissions" id="permissions-clear"><%= t('cpanel.users.clear') %></a>
+ </form>
+ <p id="permissions-loading" role="status" hidden><%= t('cpanel.users.loading') %></p>
+ <p id="permissions-error" role="alert" hidden></p>
+ <div id="permissions-results" aria-busy="false">
+  <div class="users-items" role="list">
+   <% for(const user of rows) { %><article class="users-item <%= user.active?'':'is-inactive' %>" role="listitem" data-user-id="<%= user.id %>">
+    <%- include('../partials/permissions/identity',{user}) %>
+    <div class="permissions-summary"><% if(user.protected) { %><strong><%= t('cpanel.permissions.fullAccess') %></strong><p><%= t('cpanel.permissions.protected') %></p><% } else { %><span><%= t('cpanel.permissions.grantedCount') %>: <strong><%= user.count %></strong></span><a class="btn btn-outline-secondary btn-sm" href="/cpanel/permissions/<%= user.id %>" aria-label="<%= t('cpanel.permissions.edit') %> — <%= user.name %>"><%= t('cpanel.permissions.edit') %></a><% } %></div>
+   </article><% } %>
+  </div>
+  <% if(!rows.length) { %><div class="users-empty"><h2><%= t('cpanel.users.noResults') %></h2></div><% } %>
+  <% if(total>pageSize) { %><nav class="users-pagination" aria-label="<%= t('cpanel.users.page') %>">
+   <% if(page>1) { %><a class="btn btn-outline-secondary btn-sm" href="<%= pageHref(page-1) %>"><%= t('cpanel.users.previous') %></a><% } %>
+   <span><%= t('cpanel.users.page') %> <%= page %> / <%= Math.ceil(total/pageSize) %></span>
+   <% if(page*pageSize<total) { %><a class="btn btn-outline-secondary btn-sm" href="<%= pageHref(page+1) %>"><%= t('cpanel.users.next') %></a><% } %>
+  </nav><% } %>
+ </div>
+</section>

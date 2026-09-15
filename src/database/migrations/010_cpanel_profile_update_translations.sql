@@ -1,0 +1,16 @@
+INSERT INTO interface_translations(language_code,translation_key,translation_value) VALUES
+('tm','cpanel.profile.saved','Profil maglumatlary täzelendi.'),
+('ru','cpanel.profile.saved','Данные профиля сохранены.'),
+('en','cpanel.profile.saved','Profile information saved.'),
+('tm','cpanel.profile.invalidName','Adyňyzy giriziň (iň köp 200 nyşan).'),
+('ru','cpanel.profile.invalidName','Укажите имя длиной до 200 символов.'),
+('en','cpanel.profile.invalidName','Enter a name of up to 200 characters.'),
+('tm','cpanel.profile.invalidPhone','Telefon belgisi 50 nyşandan uzyn bolmaly däl.'),
+('ru','cpanel.profile.invalidPhone','Телефон должен содержать не более 50 символов.'),
+('en','cpanel.profile.invalidPhone','Phone must contain no more than 50 characters.'),
+('tm','cpanel.profile.avatarFailed','Suraty saklap bolmady. Faýly täzeden ýükläň.'),
+('ru','cpanel.profile.avatarFailed','Не удалось сохранить аватар. Загрузите файл повторно.'),
+('en','cpanel.profile.avatarFailed','Unable to save the avatar. Please upload the file again.'),
+('tm','cpanel.profile.failure','Profil maglumatlaryny saklap bolmady. Gaýtadan synanyşyň.'),
+('ru','cpanel.profile.failure','Не удалось сохранить профиль. Повторите попытку.'),
+('en','cpanel.profile.failure','Unable to save the profile. Please try again.');

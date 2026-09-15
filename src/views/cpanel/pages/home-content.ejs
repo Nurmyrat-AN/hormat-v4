@@ -1,0 +1,11 @@
+<section id="overview" class="shell-welcome" aria-labelledby="welcome-heading">
+  <div class="welcome-mark"><%- include('../partials/shell/icon', { name: 'grid' }) %></div>
+  <div class="welcome-copy">
+    <span class="shell-badge"><span></span><%= t('cpanel.shell.ready') %></span>
+    <h2 id="welcome-heading"><%= t('cpanel.shell.welcome') %> <%= shell.user.name %></h2>
+    <p><%= t('cpanel.shell.welcomeDescription') %></p>
+    <div class="welcome-divider"></div>
+    <p class="welcome-note"><%- include('../partials/shell/icon', { name: 'check' }) %><%= t('cpanel.shell.foundationNote') %></p>
+  </div>
+  <div class="welcome-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
+</section>

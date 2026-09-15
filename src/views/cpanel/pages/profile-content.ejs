@@ -1,0 +1,32 @@
+<section class="profile-card">
+  <div class="nav nav-tabs profile-tabs" role="tablist" aria-label="<%= t('cpanel.profile.title') %>">
+    <button class="nav-link <%= !passwordResult ? 'active' : '' %>" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="<%= !passwordResult %>"><%= t('cpanel.profile.tabs.basic') %></button>
+    <button class="nav-link <%= passwordResult ? 'active' : '' %>" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="<%= !!passwordResult %>"><%= t('cpanel.profile.tabs.password') %></button>
+  </div>
+  <div class="tab-content profile-content">
+    <div class="tab-pane <%= !passwordResult ? 'show active' : '' %>" id="basic" role="tabpanel" aria-labelledby="basic-tab" tabindex="0">
+      <%- include('../partials/media/uploader', { uploader: { existingUrl: shell.user.avatarUrl, initials: shell.user.initials, name: profile.name, subtitle: profile.job } }) %>
+      <form id="profile-form" method="post" action="/cpanel/profile" novalidate aria-label="<%= t('cpanel.profile.tabs.basic') %>">
+        <input type="hidden" name="_csrf" value="<%= cpanelSession.csrf_token %>">
+        <div class="profile-fields">
+          <div><label class="form-label" for="profile-name"><%= t('cpanel.profile.fields.name') %></label><input class="form-control" id="profile-name" name="name" maxlength="200" required type="text" autocomplete="name" value="<%= profile.name %>" ></div>
+          <div><label class="form-label" for="profile-phone"><%= t('cpanel.profile.fields.phone') %></label><input class="form-control" id="profile-phone" name="phone" maxlength="50" type="tel" autocomplete="tel" value="<%= profile.phone %>" ></div>
+          <div><label class="form-label" for="profile-job"><%= t('cpanel.profile.fields.job') %></label><input class="form-control" id="profile-job" type="text" autocomplete="organization-title" value="<%= profile.job %>" readonly></div>
+          <div><label class="form-label" for="profile-email"><%= t('cpanel.profile.fields.email') %></label><input class="form-control" id="profile-email" type="email" autocomplete="email" value="<%= profile.email %>" readonly></div>
+        </div>
+        <button type="submit" class="btn btn-success profile-action" data-preview-action disabled><%= t('cpanel.profile.actions.save') %></button>
+      </form>
+      <p id="profile-status" class="profile-notice" role="status" data-failure="<%= t('cpanel.profile.failure') %>" data-name="<%= t('cpanel.profile.invalidName') %>" data-phone="<%= t('cpanel.profile.invalidPhone') %>" data-avatar="<%= t('cpanel.profile.avatarFailed') %>" <%= profileSaved ? '' : 'hidden' %>><%= profileSaved ? t('cpanel.profile.saved') : '' %></p>
+    </div>
+    <div class="tab-pane <%= passwordResult ? 'show active' : '' %>" id="password" role="tabpanel" aria-labelledby="password-tab" tabindex="0">
+      <form method="post" action="/cpanel/profile/password#password" id="password-form" class="profile-password-form" novalidate data-result="<%= passwordResult || '' %>" aria-label="<%= t('cpanel.profile.tabs.password') %>">
+        <input type="hidden" name="_csrf" value="<%= cpanelSession.csrf_token %>">
+        <div class="mb-3"><label class="form-label" for="profile-password-current"><%= t('cpanel.profile.password.current') %></label><div class="profile-password-control"><input class="form-control" id="profile-password-current" name="currentPassword" required type="password" autocomplete="current-password"><button class="shell-icon-button" type="button" data-password-toggle aria-controls="profile-password-current" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../partials/login-icon', { name: 'eye' }) %></span><span class="icon-hide" hidden><%- include('../partials/login-icon', { name: 'eye-off' }) %></span></button></div></div>
+        <div class="mb-3"><label class="form-label" for="profile-password-new"><%= t('cpanel.profile.password.new') %></label><div class="profile-password-control"><input class="form-control" id="profile-password-new" name="newPassword" required type="password" autocomplete="new-password"><button class="shell-icon-button" type="button" data-password-toggle aria-controls="profile-password-new" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../partials/login-icon', { name: 'eye' }) %></span><span class="icon-hide" hidden><%- include('../partials/login-icon', { name: 'eye-off' }) %></span></button></div></div>
+        <div class="mb-3"><label class="form-label" for="profile-password-confirm"><%= t('cpanel.profile.password.confirm') %></label><div class="profile-password-control"><input class="form-control" id="profile-password-confirm" name="confirmPassword" required type="password" autocomplete="new-password"><button class="shell-icon-button" type="button" data-password-toggle aria-controls="profile-password-confirm" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../partials/login-icon', { name: 'eye' }) %></span><span class="icon-hide" hidden><%- include('../partials/login-icon', { name: 'eye-off' }) %></span></button></div></div>
+        <button type="submit" id="password-submit" class="btn btn-success profile-action"><%= t('cpanel.profile.tabs.password') %></button>
+      </form>
+      <p id="password-status" class="profile-notice" role="status" data-required="<%= t('cpanel.password.required') %>" data-mismatch="<%= t('cpanel.password.mismatch') %>" <%= !passwordResult ? 'hidden' : '' %>><%= passwordMessage %></p>
+    </div>
+  </div>
+</section>

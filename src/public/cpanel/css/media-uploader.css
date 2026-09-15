@@ -1,0 +1,11 @@
+.media-uploader { display:flex; align-items:flex-start; gap:20px; }
+.media-uploader-controls { min-width:0; }
+.media-uploader-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.media-uploader [data-upload-progress] { display:flex; align-items:center; gap:10px; margin-top:12px; }
+.media-uploader [data-upload-progress][hidden] { display:none; }
+.media-uploader progress { width:180px; max-width:65%; accent-color:var(--shell-accent); }
+.media-uploader [data-upload-status] { margin:10px 0; font-size:13px; }
+.media-uploader [data-upload-file] { font-size:13px; color:var(--shell-accent); overflow-wrap:anywhere; }
+.media-uploader[data-upload-state="error"] [data-upload-status] { color:var(--bs-danger-text-emphasis); }
+.media-uploader .btn-outline-secondary { color:var(--shell-muted); border-color:var(--shell-muted); }
+@media(max-width:575px) { .media-uploader { flex-direction:column; } }

@@ -1,0 +1,6 @@
+<form class="shell-language" method="post" action="/language">
+  <label for="shell-language" class="visually-hidden"><%= t('cpanel.login.language') %></label>
+  <span class="language-icon"><%- include('icon', { name: 'globe' }) %></span>
+  <select id="shell-language" name="language" class="form-select"><% for (const item of languages) { %><option value="<%= item.code %>" <%= item.code === language ? 'selected' : '' %>><%= item.display_name %></option><% } %></select>
+  <input type="hidden" name="returnTo" value="<%= shell.returnTo %>">
+</form>

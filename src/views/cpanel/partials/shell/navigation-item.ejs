@@ -1,0 +1,14 @@
+<li data-navigation-id="<%= item.id %>" data-availability="<%= item.status || 'submenu' %>" class="nav-entry <%= item.active ? 'is-active' : '' %>">
+  <% if (item.children) { %>
+    <button type="button" class="shell-nav-link submenu-toggle" data-bs-target="#nav-<%= item.id %>" aria-expanded="<%= item.active ? 'true' : 'false' %>" aria-controls="nav-<%= item.id %>" title="<%= item.label %>">
+      <%- include('icon', { name: item.icon }) %><span class="sidebar-label"><%= item.label %></span><span class="sidebar-label submenu-chevron"><%- include('icon', { name: 'chevron' }) %></span>
+    </button>
+    <ul id="nav-<%= item.id %>" class="sidebar-list sidebar-submenu collapse <%= item.active ? 'show' : '' %>">
+      <% for (const child of item.children) { %><%- include('navigation-item', { item: child }) %><% } %>
+    </ul>
+  <% } else if (item.status === 'enabled' && item.href) { %>
+    <a class="shell-nav-link" href="<%= item.href %>" <%- item.active ? 'aria-current="page"' : '' %> title="<%= item.label %>"><%- include('icon', { name: item.icon }) %><span class="sidebar-label"><%= item.label %></span></a>
+  <% } else { %>
+    <span class="shell-nav-link is-disabled" role="link" tabindex="0" aria-disabled="true" title="<%= item.label %> — <%= t('cpanel.navigation.notAvailable') %>" aria-label="<%= item.label %> — <%= t('cpanel.navigation.notAvailable') %>"><%- include('icon', { name: item.icon }) %><span class="sidebar-label"><%= item.label %></span></span>
+  <% } %>
+</li>

@@ -1,0 +1,7 @@
+<div class="users-identity">
+ <span class="shell-avatar" aria-hidden="true"><span><%= user.initials %></span><% if(user.avatarUrl) { %><img src="<%= user.avatarUrl %>" alt="" referrerpolicy="no-referrer"><% } %></span>
+ <div><h2><%= user.name %></h2><% if(user.job) { %><small><%= user.job %></small><% } %>
+ <% if(user.protected) { %><span class="users-protected-badge"><%= t('cpanel.users.superuser') %></span><% } %></div>
+</div>
+<div class="users-email"><%= user.email %></div>
+<span class="users-status <%= user.active ? '' : 'is-inactive' %>"><%= user.active ? t('cpanel.users.active') : t('cpanel.users.inactive') %></span>

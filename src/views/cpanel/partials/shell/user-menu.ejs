@@ -1,0 +1,12 @@
+<div class="dropdown shell-user">
+  <button id="user-menu" class="shell-user-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<%= t('cpanel.shell.userMenu') %>: <%= shell.user.name %>">
+    <span class="shell-avatar" aria-hidden="true"><span><%= shell.user.initials %></span><% if (shell.user.avatarUrl) { %><img src="<%= shell.user.avatarUrl %>" alt="" referrerpolicy="no-referrer"><% } %></span>
+    <span class="topbar-user-name"><%= shell.user.name %></span><span class="user-chevron"><%- include('icon', { name: 'chevron' }) %></span>
+  </button>
+  <div class="dropdown-menu dropdown-menu-end shell-user-dropdown" aria-labelledby="user-menu">
+    <div class="user-summary"><small><%= t('cpanel.auth.signedInAs') %></small><strong><%= shell.user.name %></strong><% if (shell.user.job) { %><span><%= shell.user.job %></span><% } %></div>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="/cpanel/profile"><%= t('cpanel.userMenu.profile') %></a>
+    <form method="post" action="/cpanel/logout"><input type="hidden" name="_csrf" value="<%= cpanelSession.csrf_token %>"><button class="dropdown-item shell-logout" type="submit"><%- include('icon', { name: 'logout' }) %><%= t('cpanel.auth.logout') %></button></form>
+  </div>
+</div>

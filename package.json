@@ -1,0 +1,48 @@
+{
+  "name": "hormat-code-v4",
+  "version": "0.1.0",
+  "description": "Initial HORMAT V4 technical foundation",
+  "scripts": {
+    "dev": "node scripts/assets.mjs && tsx watch src/server.ts",
+    "build": "node scripts/clean.mjs && tsc && node scripts/assets.mjs --production",
+    "start": "node --enable-source-maps dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:unit && playwright test --project=core && playwright test --project=users",
+    "test:unit": "node --import tsx --test tests/unit/*.test.ts",
+    "db:migrate": "tsx src/database/migrate.ts",
+    "db:migrate:production": "node dist/database/migrate.js",
+    "localization:check": "tsx scripts/check-localization.ts",
+    "localization:verify": "tsx scripts/verify-localization.ts",
+    "cpanel:bootstrap": "tsx src/cpanel/auth/bootstrap-cli.ts",
+    "cpanel:bootstrap:production": "node dist/cpanel/auth/bootstrap-cli.js"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "argon2": "^0.45.1",
+    "bootstrap": "^5.3.8",
+    "busboy": "^1.6.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "file-type": "^22.1.0",
+    "jquery": "^4.0.0",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.4",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/busboy": "^1.5.4",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.5.1",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

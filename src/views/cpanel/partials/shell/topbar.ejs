@@ -1,0 +1,9 @@
+<header class="shell-topbar">
+  <button id="sidebar-toggle" type="button" class="shell-icon-button" aria-controls="cpanel-sidebar" aria-expanded="true" aria-label="<%= t('cpanel.shell.toggleMenu') %>" title="<%= t('cpanel.shell.toggleMenu') %>"><%- include('icon', { name: 'menu' }) %></button>
+  <span class="topbar-context"><%= t('cpanel.shell.workspace') %></span>
+  <div class="topbar-controls">
+    <%- include('theme-switcher') %>
+    <%- include('language-selector') %>
+    <%- include('user-menu') %>
+  </div>
+</header>

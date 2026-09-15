@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="<%= language %>">
+<head>
+  <%- include('../partials/head', { title: t('cpanel.login.title') }) %>
+  <link rel="stylesheet" href="/public/cpanel/css/login.css">
+</head>
+<body class="login-page" data-development="<%= isDevelopment %>">
+  <main class="login-shell">
+    <aside class="login-promo" aria-labelledby="promo-heading">
+      <div class="promo-content">
+        <%- include('../partials/wordmark') %>
+        <div class="promo-intro">
+          <h2 id="promo-heading"><%= t('cpanel.login.promoHeadline') %></h2>
+          <span class="promo-rule" aria-hidden="true"></span>
+          <p><%= t('cpanel.login.promoDescription') %></p>
+        </div>
+        <ul class="promo-features">
+          <% for (const feature of [
+            { icon: 'grid', title: t('cpanel.login.featureChoice'), detail: t('cpanel.login.featureChoiceDetail') },
+            { icon: 'shield', title: t('cpanel.login.featureService'), detail: t('cpanel.login.featureServiceDetail') },
+            { icon: 'bag', title: t('cpanel.login.featureConvenience'), detail: t('cpanel.login.featureConvenienceDetail') }
+          ]) { %>
+            <li><%- include('../partials/login-icon', { name: feature.icon }) %><div><strong><%= feature.title %></strong><span><%= feature.detail %></span></div></li>
+          <% } %>
+        </ul>
+      </div>
+      <div class="promo-footer"><span class="promo-rule" aria-hidden="true"></span><div><p><%= t('cpanel.login.slogan') %></p><span><%= t('cpanel.login.sloganDetail') %></span></div></div>
+    </aside>
+    <section class="login-panel" aria-labelledby="login-heading">
+      <form class="login-language" action="/language" method="post">
+        <%- include('../partials/login-icon', { name: 'globe' }) %>
+        <label class="visually-hidden" for="login-language"><%= t('cpanel.login.language') %></label>
+        <select id="login-language" name="language">
+          <% for (const item of languages) { %><option value="<%= item.code %>" <%= item.code === language ? 'selected' : '' %>><%= item.display_name %></option><% } %>
+        </select>
+        <input type="hidden" name="returnTo" value="/cpanel/login">
+        <button class="language-apply" type="submit"><%= t('cpanel.login.changeLanguage') %></button>
+      </form>
+      <div class="login-content">
+        <header class="login-heading">
+          <%- include('../partials/wordmark') %>
+          <h1 id="login-heading"><%= t('cpanel.login.title') %></h1>
+          <p><%= t('cpanel.login.subtitle') %></p>
+        </header>
+        <form id="login-form" action="/cpanel/login" method="post" novalidate>
+          <input type="hidden" name="_csrf" value="<%= cpanelSession.csrf_token %>">
+          <div class="login-field">
+            <label for="login-email"><%= t('cpanel.login.email') %></label>
+            <div class="input-wrap"><%- include('../partials/login-icon', { name: 'mail' }) %><input class="form-control" id="login-email" name="email" maxlength="254" type="email" autocomplete="username" inputmode="email" required placeholder="<%= t('cpanel.login.email') %>" aria-describedby="email-error" data-required="<%= t('cpanel.login.emailRequired') %>" data-invalid="<%= t('cpanel.login.emailInvalid') %>"></div>
+            <p id="email-error" class="field-error" hidden></p>
+          </div>
+          <div class="login-field">
+            <label for="login-password"><%= t('cpanel.login.password') %></label>
+            <div class="input-wrap"><%- include('../partials/login-icon', { name: 'lock' }) %><input class="form-control" id="login-password" name="password" maxlength="1024" type="password" autocomplete="current-password" required placeholder="<%= t('cpanel.login.password') %>" aria-describedby="password-error" data-required="<%= t('cpanel.login.passwordRequired') %>"><button id="password-toggle" data-password-toggle type="button" aria-controls="login-password" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../partials/login-icon', { name: 'eye' }) %></span><span class="icon-hide" hidden><%- include('../partials/login-icon', { name: 'eye-off' }) %></span></button></div>
+            <p id="password-error" class="field-error" hidden></p>
+          </div>
+          <button id="login-submit" class="btn login-submit" type="submit"><span><%= t('cpanel.login.submit') %></span><%- include('../partials/login-icon', { name: 'arrow' }) %></button>
+          <p id="login-status" class="login-status" role="status" <%= loginError ? '' : 'hidden' %>><%= t('cpanel.auth.invalidCredentials') %></p>
+        </form>
+        <div class="login-notice"><%- include('../partials/login-icon', { name: 'shield' }) %><p><%= t('cpanel.login.managedNotice') %></p></div>
+      </div>
+      <footer class="login-copyright">© <%= year %> <%= t('brand.name') %> <%= t('brand.market') %>.<br><%= t('cpanel.login.rights') %></footer>
+    </section>
+  </main>
+  <%- include('../partials/scripts') %>
+  <script src="/public/cpanel/js/password-visibility.js"></script>
+  <script src="/public/cpanel/js/login.js"></script>
+</body>
+</html>

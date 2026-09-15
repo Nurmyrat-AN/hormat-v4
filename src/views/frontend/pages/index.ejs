@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="<%= language %>">
+<head>
+  <%- include('../partials/head', { title: t('frontend.title') }) %>
+</head>
+<body data-development="<%= isDevelopment %>">
+  <main class="container py-4"><h1><%= t('frontend.title') %></h1></main>
+  <%- include('../partials/scripts') %>
+</body>
+</html>

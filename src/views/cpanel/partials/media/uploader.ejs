@@ -1,0 +1,16 @@
+<div class="media-uploader profile-identity" data-media-uploader data-existing-url="<%= uploader.existingUrl || '' %>" data-max-bytes="<%= mediaMaxBytes %>" data-csrf="<%= cpanelSession.csrf_token %>"
+ data-required="<%= t('cpanel.media.fileRequired') %>" data-too-large="<%= t('cpanel.media.fileTooLarge') %>" data-type-not-allowed="<%= t('cpanel.media.typeNotAllowed') %>" data-invalid="<%= t('cpanel.media.fileInvalid') %>" data-failed="<%= t('cpanel.media.uploadFailed') %>" data-uploading="<%= t('cpanel.media.uploading') %>" data-uploaded="<%= t('cpanel.media.uploaded') %>">
+  <span class="shell-avatar profile-avatar" aria-hidden="true"><span><%= uploader.initials %></span><img data-media-preview src="<%= uploader.existingUrl || '' %>" alt="" referrerpolicy="no-referrer" <%= uploader.existingUrl ? '' : 'hidden' %>></span>
+  <div class="media-uploader-controls">
+    <% if (uploader.name) { %><h2><%= uploader.name %></h2><% if (uploader.subtitle) { %><p><%= uploader.subtitle %></p><% } %><% } %>
+    <div class="media-uploader-actions">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-upload-choose disabled><%= t('cpanel.media.chooseFile') %></button>
+      <input type="file" data-upload-input hidden aria-label="<%= t('cpanel.media.chooseFile') %>">
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-upload-remove hidden><%= t('cpanel.media.removeSelection') %></button>
+      <button type="button" class="btn btn-outline-secondary btn-sm" data-upload-retry hidden><%= t('cpanel.media.retry') %></button>
+    </div>
+    <div data-upload-progress hidden><progress max="100" value="0" aria-label="<%= t('cpanel.media.uploading') %>"></progress><span data-upload-percent></span></div>
+    <p data-upload-status role="status" hidden></p>
+    <a data-upload-file hidden download><span><%= t('cpanel.media.previewFile') %></span>: <span data-upload-name></span></a>
+  </div>
+</div>

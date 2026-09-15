@@ -1,0 +1,12 @@
+<section class="permission-detail">
+ <div class="users-item permission-person <%= user.active?'':'is-inactive' %>"><%- include('../partials/permissions/identity',{user}) %></div>
+ <form id="permission-form" data-editable="<%= canEdit %>" data-endpoint="/cpanel/api/permissions/<%= user.id %>" data-csrf="<%= cpanelSession.csrf_token %>" data-saving="<%= t('cpanel.permissions.saving') %>" data-failure="<%= t('cpanel.permissions.saveFailed') %>">
+  <% if(!canEdit) { %><p class="permission-readonly"><%= self ? t('cpanel.permissions.selfEdit') : t('cpanel.permissions.readOnly') %></p><% } %>
+  <% for(const group of groups) { %><fieldset class="permission-group"><legend><%= group.label %></legend>
+   <% for(const permission of group.permissions) { %><div class="permission-control form-check form-switch"><label for="permission-<%= permission.id %>"><%= permission.label %></label><input class="form-check-input" type="checkbox" role="switch" data-permission-key="<%= permission.key %>" id="permission-<%= permission.id %>" <%= permission.checked?'checked':'' %> <%= canEdit?'':'disabled' %>></div><% } %>
+  </fieldset><% } %>
+  <p id="permission-unsaved" role="status" hidden><%= t('cpanel.permissions.unsaved') %></p>
+  <p id="permission-feedback" role="status" hidden></p>
+  <div class="permission-actions"><a class="btn btn-outline-secondary" href="/cpanel/permissions"><%= t('cpanel.users.cancel') %></a><button id="permission-save" class="btn btn-success" type="button" disabled><%= t('cpanel.profile.actions.save') %></button></div>
+ </form>
+</section>

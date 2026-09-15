@@ -1,0 +1,21 @@
+<nav class="media-breadcrumb" aria-label="<%= t('cpanel.media.path') %>"><% breadcrumbs.forEach((part,i)=>{ %><% if(i<breadcrumbs.length-1){ %><a href="<%= part.href %>"><%= part.name %></a><span aria-hidden="true">/</span><% }else{ %><span aria-current="page"><%= part.name %></span><% } %><% }); %></nav>
+<% if(path.split('/')[0]==='cache'){ %><p class="media-message text-body-secondary"><%= t('cpanel.media.cacheWarning') %></p><% } %>
+<% if(limited){ %><p class="alert alert-secondary mx-3"><%= t('cpanel.media.limited') %></p><% } %>
+<% if(!items.length){ %><div class="media-empty"><%- include('../partials/shell/icon',{name:'folder'}) %><h2 class="fs-5"><%= query?t('cpanel.media.noResults'):t('cpanel.media.empty') %></h2></div><% } %>
+<div class="media-list-heading" aria-hidden="true"><span><%= t('cpanel.media.name') %></span><span><%= t('cpanel.media.type') %></span><span><%= t('cpanel.media.size') %></span><span><%= t('cpanel.media.modified') %></span><span><%= t('cpanel.media.actions') %></span></div>
+<div class="media-items">
+<% const types={folder:t('cpanel.media.folder'),image:t('cpanel.media.image'),video:t('cpanel.media.video'),file:t('cpanel.media.file')};for(const item of items){const size=item.size===null?'—':new Intl.NumberFormat(language==='tm'?'tk':language,{maximumFractionDigits:1}).format(item.size<1024?item.size:item.size/1024)+(item.size<1024?' B':' KiB');const modified=new Intl.DateTimeFormat(language==='tm'?'tk':language,{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.modified)); %>
+ <article class="media-item <%= item.path===selectedPath?'is-selected':'' %>" tabindex="0" aria-label="<%= item.name %>" data-entry="<%= JSON.stringify({...item,typeLabel:types[item.type],sizeLabel:size,modifiedLabel:modified}) %>">
+  <div class="media-visual"><% if(item.image){ %><img loading="lazy" src="<%= item.url %>" alt=""><% } %><span class="media-fallback"><%- include('../partials/shell/icon',{name:item.folder?'folder':item.type==='image'?'image':item.type==='video'?'video':'file'}) %></span></div>
+  <div class="media-identity"><% if(item.folder){ %><a class="media-name" href="<%= href(item.path) %>" title="<%= item.name %>"><%= item.name %></a><% }else if(query&&searchScope==='all'){ %><a class="media-name" href="<%= href(item.parent,item.path) %>" title="<%= item.name %>"><%= item.name %></a><% }else{ %><button type="button" class="media-name" data-media-action="details" title="<%= item.name %>"><%= item.name %></button><% } %>
+   <% if(query&&searchScope==='all'){ %><a class="media-context" href="<%= href(item.parent,item.path) %>" title="<%= t('cpanel.media.location') %>"><%= item.parent||t('cpanel.navigation.media') %></a><% } %>
+   <% if(item.temporary||item.managed){ %><span class="media-badge"><%= item.temporary?t('cpanel.media.temporary'):t('cpanel.media.system') %></span><% } %>
+  </div>
+  <span class="media-type"><%= types[item.type] %></span><span class="media-size"><%= size %></span><time class="media-modified" datetime="<%= item.modified %>"><%= modified %></time>
+  <div class="dropdown media-actions"><button type="button" class="btn btn-sm" data-bs-toggle="dropdown" aria-label="<%= t('cpanel.media.actions') %>"><%- include('../partials/shell/icon',{name:'more'}) %></button><ul class="dropdown-menu dropdown-menu-end">
+   <% if(item.folder){ %><li><a class="dropdown-item" href="<%= href(item.path) %>"><%= t('cpanel.media.open') %></a></li><% }else{ %><li><button type="button" class="dropdown-item" data-media-action="copy" <%= item.url?'':'disabled' %>><%= t('cpanel.media.copy') %></button></li><% } %>
+   <li><button type="button" class="dropdown-item" data-media-action="rename" <%= capabilities.rename?'':'disabled' %> title="<%= capabilities.rename?t('cpanel.media.preview'):t('cpanel.auth.forbidden') %>"><%= t('cpanel.media.rename') %></button></li><li><button type="button" class="dropdown-item text-danger" data-media-action="delete" <%= capabilities.delete?'':'disabled' %> title="<%= capabilities.delete?t('cpanel.media.preview'):t('cpanel.auth.forbidden') %>"><%= t('cpanel.media.delete') %></button></li><li><button type="button" class="dropdown-item" data-media-action="details"><%= t('cpanel.media.details') %></button></li>
+  </ul></div>
+ </article>
+<% } %>
+</div>

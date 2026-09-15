@@ -1,0 +1,17 @@
+<aside id="cpanel-sidebar" class="shell-sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-labelledby="sidebar-brand">
+  <div class="sidebar-brand-row"><a class="shell-brand" href="/cpanel" id="sidebar-brand"><span class="brand-symbol" aria-hidden="true">H</span><span class="sidebar-label"><strong><%= t('brand.name') %></strong><small><%= t('cpanel.title') %></small></span></a>
+    <button class="shell-icon-button sidebar-mobile-close" type="button" data-bs-dismiss="offcanvas" data-bs-target="#cpanel-sidebar" aria-label="<%= t('cpanel.shell.closeMenu') %>"><%- include('icon', { name: 'close' }) %></button>
+  </div>
+  <nav class="sidebar-navigation" aria-label="<%= t('cpanel.shell.navigation') %>">
+    <% for (const group of shell.navigation) { %>
+      <div class="sidebar-group"><p class="sidebar-group-label"><%= group.label %></p><ul class="sidebar-list">
+        <% for (const item of group.items) { %><%- include('navigation-item', { item }) %><% } %>
+      </ul></div>
+    <% } %>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <button id="sidebar-pin" class="sidebar-pin shell-icon-button" type="button" aria-pressed="true" aria-label="<%= t('cpanel.shell.unpin') %>" data-pin="<%= t('cpanel.shell.pin') %>" data-unpin="<%= t('cpanel.shell.unpin') %>"><%- include('icon', { name: 'pin' }) %><span class="sidebar-label"><%= t('cpanel.shell.unpin') %></span></button>
+    <p class="sidebar-label sidebar-note"><%= t('cpanel.shell.personalWorkspace') %></p>
+  </div>
+</aside>
