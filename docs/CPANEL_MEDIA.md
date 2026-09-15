@@ -51,3 +51,13 @@ The read architecture/UI is reviewed through tests, but the Media module is not 
 ## Verification roots
 
 Filesystem unit tests create unique OS temporary roots; browser/production tests configure `.test-media` and create unique disposable subtrees. Traversal, symlinks (executed on this platform), inaccessible directories, external changes, deep search, bounded results, metadata and cancellation are covered. Live manager translation checks use existing read-only locations; synthetic empty/limited trees belong solely to isolated tests.
+
+## Activation (supersedes the UI-only status above)
+
+The owner approved the mutation contracts and clarified direct uploads: **all types, maximum 10,485,760 bytes per file**. Profile/Users retain the separate Universal Upload policy and cacheToken workflow. See architecture section 38 for the full contract and [activation report](../MEDIA_FILE_MANAGER_ACTIVATION_REPORT.md) for final verification/navigation status.
+
+File Manager endpoints are `/cpanel/api/media/files` (multipart + relative path query), `/folders` (parent/name), `/rename` (path/name), `/delete` (path/recursive), and GET `/delete-info` (path). POST actions use authentication, independent action permission and header CSRF. No full-control action repairs database references. Recursive deletion requires separate explicit UI confirmation and backend boolean mode. Root and private token metadata are protected.
+
+Human filenames now receive encoded canonical URLs through controlled public serving, retaining safe attachment handling. Rename changes URLs; old references remain unchanged. Existing cache aliases remain ownership/TTL-controlled. Direct files in cache are ordinary files, not domain tokens; their cleanup is administrator-managed. Known cache/domain warnings remain visible.
+
+Rename requires GNU coreutils with `--no-copy --update=none-fail` (verified 9.7/Linux). Complete direct uploads publish with exclusive hard links on the same filesystem. Aborted uploads remove their staging directories; a process crash may leave hidden `.manager-incoming` staging for operator cleanup. Private staging is never browsable/servable. No overwrite fallback exists.

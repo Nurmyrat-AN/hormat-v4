@@ -1,0 +1,109 @@
+import path from 'node:path';
+import { mkdir, lstat, link, unlink, rmdir, rm, opendir, mkdtemp } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import type { Request } from 'express';
+import { MediaBrowser } from './browser.js';
+import { BrowseError, validateMediaPath } from '../../media/paths.js';
+import { receiveFile } from '../../media/multipart.js';
+import { MediaError } from '../../media/errors.js';
+import { tokenPattern } from '../../media/store.js';
+
+const execute = promisify(execFile);
+export const directUploadMaxBytes = 10 * 1024 * 1024;
+export class ManagerError extends Error {
+ constructor(readonly code: string, readonly status = 400) { super(code); }
+}
+export function managerError(error: unknown, fallback: string): ManagerError {
+ if (error instanceof ManagerError) return error;
+ if (error instanceof MediaError) return new ManagerError(error.code, error.code === 'MEDIA_FILE_TOO_LARGE' ? 413 : 400);
+ if (error instanceof BrowseError) return new ManagerError(error.status === 400 ? 'MEDIA_INVALID_PATH' : 'MEDIA_NOT_FOUND', error.status);
+ const code = (error as NodeJS.ErrnoException)?.code;
+ return code === 'EEXIST' ? new ManagerError('MEDIA_ALREADY_EXISTS', 409) : code === 'ENOENT' || code === 'ENOTDIR' ? new ManagerError('MEDIA_NOT_FOUND', 404) : code === 'ENOTEMPTY' ? new ManagerError('MEDIA_FOLDER_NOT_EMPTY',409) : code === 'EACCES' || code === 'EPERM' ? new ManagerError('MEDIA_PERMISSION_DENIED',403) : new ManagerError(fallback,500);
+}
+export function validateName(name: string): void {
+ if (typeof name !== 'string' || !name.trim() || Buffer.byteLength(name) > 255 || /[/:\\%\x00-\x1f\x7f]/.test(name) || name.endsWith('.') || name.endsWith(' ') || name.startsWith('.')) throw new ManagerError('MEDIA_INVALID_NAME');
+ try { validateMediaPath(name); } catch { throw new ManagerError('MEDIA_INVALID_NAME'); }
+}
+// Serializes this application's tree mutations; no-clobber filesystem primitives also protect collisions.
+const queues = new Map<string, Promise<unknown>>();
+export class MediaManager extends MediaBrowser {
+ private async serialized<T>(operation: () => Promise<T>): Promise<T> {
+  const key = path.resolve(this.root), previous = queues.get(key) ?? Promise.resolve();
+  const pending = previous.catch(() => undefined).then(operation); queues.set(key,pending);
+  try { return await pending; } finally { if(queues.get(key) === pending) queues.delete(key); }
+ }
+ private async directory(relative: string) {
+  const resolved = await this.resolve(relative);
+  if (!(await lstat(resolved)).isDirectory()) throw new ManagerError('MEDIA_NOT_FOUND',404);
+  return resolved;
+ }
+ private targetPath(parent: string, name: string) {
+  validateName(name);
+  const relative = [parent,name].filter(Boolean).join('/'); validateMediaPath(relative);
+  // These are private token infrastructure, not a way to manufacture domain uploads.
+  const parts = relative.split('/');
+  if(parts[0] === 'cache' && parts.length > 2 && tokenPattern.test(parts[1])) throw new ManagerError('MEDIA_CACHE_PROTECTED',403);
+  return relative;
+ }
+ async createFolder(parent: string, name: string) {
+  return this.serialized(async () => {
+   const relative = this.targetPath(parent,name), directory = await this.directory(parent);
+   await mkdir(path.join(directory,name),{mode:0o700}); return this.entry(relative);
+  });
+ }
+ async renameItem(source: string, name: string) {
+  return this.serialized(async () => {
+   if(source === '') throw new ManagerError('MEDIA_ROOT_PROTECTED',403);
+   const item = await this.entry(source), relative = this.targetPath(item.parent,name);
+   const oldPath = await this.resolve(source), directory = await this.directory(item.parent), newPath = path.join(directory,name);
+   // GNU coreutils uses renameat2(RENAME_NOREPLACE) on supported Linux filesystems.
+   // --no-copy forbids a cross-filesystem copy/delete fallback; --none-fail reports collisions.
+   try { await execute('mv',['--no-copy','--update=none-fail','--no-target-directory','--',oldPath,newPath]); }
+   catch(error) {
+    try { await lstat(newPath); throw new ManagerError('MEDIA_ALREADY_EXISTS',409); }
+    catch(probe) { if(probe instanceof ManagerError) throw probe; }
+    try { await lstat(oldPath); } catch(missing) { throw missing; }
+    throw new ManagerError('MEDIA_RENAME_FAILED',500);
+   }
+   return this.entry(relative);
+  });
+ }
+ async deleteInfo(relative: string) {
+  if(relative === '') throw new ManagerError('MEDIA_ROOT_PROTECTED',403);
+  const item = await this.entry(relative); let nonEmpty = false;
+  if(item.folder) {
+   // Includes private records and hidden children: never confuse visible count with empty.
+   for await(const child of await opendir(await this.resolve(relative))) { nonEmpty = true; break; }
+  }
+  return {...item,nonEmpty};
+ }
+ async deleteItem(relative: string, recursive: boolean) {
+  return this.serialized(async () => {
+   const item = await this.deleteInfo(relative), file = await this.resolve(relative);
+   if(item.folder) {
+    if(!recursive) await rmdir(file);
+    else await rm(file,{recursive:true,force:false}); // Node removes descendant symlinks, never follows them.
+   } else await unlink(file);
+   return {path:relative};
+  });
+ }
+ async uploadToFolder(request: Request, parent: string, authorize: () => Promise<void>) {
+  await this.directory(parent);
+  // Private staging is separate from Universal Media token publication/finalization.
+  const stagingRoot = path.join(await this.directory(''),'.manager-incoming');
+  await mkdir(stagingRoot,{recursive:true,mode:0o700});
+  if(!(await lstat(stagingRoot)).isDirectory()) throw new ManagerError('MEDIA_INVALID_PATH');
+  const stage = await mkdtemp(path.join(stagingRoot,'upload-')), file = path.join(stage,'file');
+  try {
+   const name = await receiveFile(request,file,directUploadMaxBytes,{preserveName:true});
+   return await this.serialized(async () => {
+    await authorize();
+    const relative = this.targetPath(parent,name), directory = await this.directory(parent);
+    // Atomic exclusive publication of complete bytes. Existing files are never overwritten.
+    await link(file,path.join(directory,name));
+    return this.entry(relative);
+   });
+  } finally { await rm(stage,{recursive:true,force:true}); }
+ }
+}

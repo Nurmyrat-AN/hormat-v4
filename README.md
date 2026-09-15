@@ -165,6 +165,6 @@ The full `npm test` command runs unit/integration tests, then the `core` and `us
 
 Permissions Management uses independent `permissions.view` and `permissions.update` rights, with the existing Super User bypass. `/cpanel/permissions` lists real users; grouped detail switches save assignable permissions atomically through `/cpanel/api/permissions/:userId`. Self-edit and Super User target edits are forbidden. See [Permissions Management](docs/CPANEL_PERMISSIONS.md) for the frozen registry contract, sparse assignments and immediate permission refresh.
 
-## Media File Manager UI review
+## Media File Manager
 
-`/cpanel/media` requires `media.view` (or Super User) and provides real filesystem browsing/search with UI-only mutation dialogs. Catalog → Media remains disabled. See [Media File Manager](docs/CPANEL_MEDIA.md). No Media table or direct File Manager upload/rename/delete API is implemented.
+`/cpanel/media` requires `media.view` (or Super User) and provides filesystem browsing/search and approved direct upload, folder creation, rename and permanent deletion. Direct uploads accept all types up to 10 MB per file; Profile/Users keep their separate cacheToken workflow. See [Media File Manager](docs/CPANEL_MEDIA.md). No Media database catalog exists. Rename requires GNU coreutils with `--no-copy --update=none-fail` (tested 9.7/Linux). See [activation report](MEDIA_FILE_MANAGER_ACTIVATION_REPORT.md) for navigation and verification status.

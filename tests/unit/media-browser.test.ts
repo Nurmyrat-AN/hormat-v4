@@ -10,7 +10,7 @@ test('filesystem browser: real hierarchy, Unicode, search/sort, hidden/private f
   await mkdir(path.join(root,'users'));await mkdir(path.join(root,'cache'));await mkdir(path.join(root,'cache','test'));await mkdir(path.join(root,'.incoming'));
   await writeFile(path.join(root,'users','Привет Türkmen.txt'),'hello');await writeFile(path.join(root,'cache','test','record.json'),'private');await writeFile(path.join(root,'cache','test','asset.bin'),'asset');await writeFile(path.join(root,'.DS_Store'),'hidden');await writeFile(path.join(root,'Thumbs.db'),'hidden');await symlink(os.tmpdir(),path.join(root,'escape'));await symlink(path.join(root,'users'),path.join(root,'internal'));
   assert.deepEqual((await browser.list('','','all','name')).items.map(e=>e.name),['cache','users']);
-  const found=await browser.list('','türkmen','all','name');assert.equal(found.items.length,1);assert.equal(found.items[0].path,'users/Привет Türkmen.txt');assert.equal(found.items[0].url,null);assert.ok(!JSON.stringify(found).includes(root));
+  const found=await browser.list('','türkmen','all','name');assert.equal(found.items.length,1);assert.equal(found.items[0].path,'users/Привет Türkmen.txt');assert.equal(found.items[0].url,'/media/users/'+encodeURIComponent('Привет Türkmen.txt'));assert.ok(!JSON.stringify(found).includes(root));
   assert.equal((await browser.list('','türkmen','current','name')).items.length,0);
   assert.deepEqual((await browser.list('cache/test','','all','name')).items.map(e=>e.name),['asset.bin']);
   for(const input of ['../','/tmp','users/../cache','users\\..','escape','internal','.incoming','users//bad','users/\0'])await assert.rejects(browser.list(input,'','all','name'));

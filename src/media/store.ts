@@ -1,3 +1,4 @@
+import {validateMediaPath} from './paths.js';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile, readFile, rename, rm, readdir, stat, lstat, unlink } from 'node:fs/promises';
 import path from 'node:path';
@@ -45,14 +46,15 @@ export class MediaStore {
     if (extension !== record.extension) throw new MediaError('MEDIA_CACHE_NOT_FOUND');
     return { file: path.join(this.root, 'cache', token, `asset.${extension}`), mimeType: record.media.mimeType };
   }
-  /** Map existing on-disk files to the current controlled public namespace, without widening serving rules. */
+  /** Map safe human-managed paths, preserving canonical domain cache token URLs. */
   async publicReferenceForRelativePath(relative: string): Promise<{url:string;mimeType:string|null} | null> {
     const parts = relative.split('/'), name = parts.at(-1) ?? '', match = name.match(/^(.+)\.([a-z0-9]+)$/);
-    if (!match) return null;
-    if (parts.length === 3 && parts[0] === 'cache' && tokenPattern.test(parts[1]) && match[1] === 'asset') {
+    try { validateMediaPath(relative); } catch { return null; }
+    if (parts.length === 3 && parts[0] === 'cache' && tokenPattern.test(parts[1]) && match && match[1] === 'asset') {
       try { const preview=await this.preview(parts[1], match[2]); return {url:`/media/cache/${parts[1]}.${match[2]}`,mimeType:preview.mimeType}; } catch { return null; }
     }
-    if (parts.length < 2 || !tokenPattern.test(match[1]) || parts.slice(0, -1).some(segment => segment === 'cache' || !/^[a-z][a-z0-9_-]*$/.test(segment))) return null;
+    try { validateMediaPath(relative); } catch { return null; }
+    if(parts[0]==='cache' && parts.length>2 && tokenPattern.test(parts[1])) return null;
     return {url:'/media/' + parts.map(encodeURIComponent).join('/'),mimeType:null};
   }
   async publicUrlForRelativePath(relative:string):Promise<string|null>{return (await this.publicReferenceForRelativePath(relative))?.url??null;}
@@ -105,6 +107,7 @@ export class MediaStore {
     await this.initialize();
     for (const entry of await readdir(path.join(this.root, 'cache'))) {
       if (!tokenPattern.test(entry)) continue;
+      if (!(await lstat(path.join(this.root, 'cache', entry))).isDirectory()) continue;
       const source = path.join(this.root, 'cache', entry);
       try {
         const record: CacheRecord = JSON.parse(await readFile(path.join(source, 'record.json'), 'utf8'));

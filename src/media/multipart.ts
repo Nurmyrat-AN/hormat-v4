@@ -4,11 +4,11 @@ import { pipeline } from 'node:stream/promises';
 import type { Request } from 'express';
 import { MediaError } from './errors.js';
 
-export async function receiveFile(request: Request, destination: string, maxBytes: number): Promise<string> {
+export async function receiveFile(request: Request, destination: string, maxBytes: number, options: {preserveName?: boolean} = {}): Promise<string> {
   if (!request.is('multipart/form-data')) throw new MediaError('MEDIA_FILE_INVALID');
   if (maxBytes > 0 && Number(request.headers['content-length']) > maxBytes + 65536) throw new MediaError('MEDIA_FILE_TOO_LARGE');
   let parser: ReturnType<typeof busboy>;
-  try { parser = busboy({ headers: request.headers, defParamCharset: 'utf8', limits: { files: 1, fields: 0, parts: 2, fileSize: maxBytes || Infinity, headerPairs: 50 } }); }
+  try { parser = busboy({ headers: request.headers, preservePath: options.preserveName ?? false, defParamCharset: 'utf8', limits: { files: 1, fields: 0, parts: 2, fileSize: maxBytes ? maxBytes + (options.preserveName ? 1 : 0) : Infinity, headerPairs: 50 } }); }
   catch { throw new MediaError('MEDIA_FILE_INVALID'); }
   let write: Promise<void> | undefined, originalName = '', received = 0, fileSeen = false;
   let failure: MediaError | undefined;
@@ -31,7 +31,7 @@ export async function receiveFile(request: Request, destination: string, maxByte
       parser.on('file', (name, stream, info) => {
         if (name !== 'file' || !info.filename) { invalidate('MEDIA_FILE_INVALID'); stream.resume(); return; }
         fileSeen = true;
-        originalName = info.filename.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 255);
+        originalName = options.preserveName ? info.filename : info.filename.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 255);
         stream.on('limit', () => invalidate('MEDIA_FILE_TOO_LARGE'));
         write = pipeline(stream, createWriteStream(destination, { flags: 'wx', mode: 0o600 }), { signal: abort.signal }).catch(() => { stop('MEDIA_UPLOAD_FAILED'); });
       });

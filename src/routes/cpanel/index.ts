@@ -1,3 +1,4 @@
+import {mediaApi} from './media-api.js';
 import { browseMedia, inspectMedia } from '../../controllers/cpanel/media-browser.js';
 import { usersApi } from './users-api.js';
 import { permissionsApi } from './permissions-api.js';
@@ -25,6 +26,7 @@ const passwordLimit = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardH
 cpanelRouter.post('/profile/password', requireCpanelAuth, urlencoded({ extended: false, limit: '16kb' }), requireCsrf, shellContext, passwordLimit, submitPassword);
 cpanelRouter.post('/profile', requireCpanelAuth, urlencoded({ extended: false, limit: '8kb' }), requireCsrf, submitProfile);
 cpanelRouter.use('/api/users',usersApi);
+cpanelRouter.use('/api/media',mediaApi);
 cpanelRouter.get('/api/media/details', requireCpanelAuth, requirePermission('media.view'), inspectMedia);
 cpanelRouter.get('/media', requireCpanelAuth, requirePermission('media.view'), shellContext, browseMedia);
 cpanelRouter.get('/users', requireCpanelAuth, requirePermission('users.view'), shellContext, users);

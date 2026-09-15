@@ -139,3 +139,5 @@ Permissions activation migration 016 adds seven keys / 21 real tm/ru/en values: 
 Media File Manager UI migration 017 adds 54 keys / 162 real tm/ru/en values. Current totals: 264 canonical keys / 792 translations, 249 used UI keys. Live checks distinguish uploader keys from manager keys in the shared namespace and exercise empty/no-result/limited results plus registry metadata.
 
 Media continuation migration 018 adds seven real tm/ru/en keys (21 values): refresh, notFound, backToRoot, mime, dimensions, children and cacheWarning in cpanel.media. Current totals: 271 canonical keys / 813 values / 256 used UI keys. New manager filesystem fixture tests are isolated; live manager checks are read-only.
+
+Media activation migration 019 adds 13 keys / 39 tm/ru/en values. Current source/database totals: 284 keys / 852 translations; 268 used UI keys. Direct upload success has its own key, distinct from temporary upload success.

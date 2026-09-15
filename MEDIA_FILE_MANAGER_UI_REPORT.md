@@ -57,17 +57,17 @@ Covers the complete supplied request, sections 1–119, including the continuati
 | 49 | Permission tests | Missing/false view denies page/details; each mutation capability independently controls its mock UI affordance. Mutation endpoints remain absent. |
 | 50 | Super User | Browse/search/details work through exact superuser=true; test asserts no extra media.* assignment rows. |
 | 51 | Registry tests | Existing registry validation, strict booleans and dynamic Permissions rendering include Media; Users/Permissions definitions preserved. |
-| 52 | Universal Media regression | FINAL_SUITE_RESULT; cache upload/token/finalization/replacement/cleanup/managed deletion and failure compensation remain unchanged. |
-| 53 | Users regression | FINAL_SUITE_RESULT; list/search, CRUD, avatar, status/password/session behavior and independent permissions. |
-| 54 | Permissions regression | FINAL_SUITE_RESULT; registry-driven saves, rollback, self-edit/Super User protection and same-session revocation. |
-| 55 | Profile regression | FINAL_SUITE_RESULT; Basic Information/avatar/password/topbar. |
-| 56 | Authentication/security | FINAL_SUITE_RESULT; login/logout, active/inactive users, sessions, CSRF, hashing and authorization. |
-| 57 | Shell regression | FINAL_SUITE_RESULT; navigation, pin/collapse/mobile, themes, languages and user menu. |
-| 58 | Frontend | FINAL_SUITE_RESULT for existing `/` and assets. |
-| 59 | Socket.IO | FINAL_SUITE_RESULT for existing connection foundation. |
-| 60 | Full regression | FINAL_SUITE_RESULT; see exact command/count below. |
+| 52 | Universal Media regression | PASS (full production suite); cache upload/token/finalization/replacement/cleanup/managed deletion and failure compensation remain unchanged. |
+| 53 | Users regression | PASS (full production suite); list/search, CRUD, avatar, status/password/session behavior and independent permissions. |
+| 54 | Permissions regression | PASS (full production suite); registry-driven saves, rollback, self-edit/Super User protection and same-session revocation. |
+| 55 | Profile regression | PASS (full production suite); Basic Information/avatar/password/topbar. |
+| 56 | Authentication/security | PASS (full production suite); login/logout, active/inactive users, sessions, CSRF, hashing and authorization. |
+| 57 | Shell regression | PASS (full production suite); navigation, pin/collapse/mobile, themes, languages and user menu. |
+| 58 | Frontend | PASS (full production suite) for existing `/` and assets. |
+| 59 | Socket.IO | PASS (full production suite) for existing connection foundation. |
+| 60 | Full regression | PASS (full production suite); see exact command/count below. |
 | 61 | TypeScript/build | `npm run typecheck` and `npm run build` passed; client JS syntax checked. |
-| 62 | Production | FINAL_SUITE_RESULT using compiled `npm start` with isolated test Media root, real reads/details, authorization, assets and localized UI. |
+| 62 | Production | PASS (full production suite) using compiled `npm start` with isolated test Media root, real reads/details, authorization, assets and localized UI. |
 | 63 | Documentation | Architecture section 37/continuation, CPANEL_MEDIA, Permissions/localization catalogs and this report updated. Read and mutation responsibilities remain separate. |
 | 64 | Unresolved UI limits | Existing public handler does not serve arbitrary filenames; such files remain browsable/inspectable without preview/Copy URL. Search/count bounds may yield partial results. No other known failing behavior after verification. |
 | 65 | Pending mutation contracts | Direct permanent upload, create folder, rename file, rename folder, delete file, delete folder. No contract is silently frozen by these mock forms. |
@@ -87,7 +87,8 @@ Filesystem owners/operators remain trusted. Component-by-component lstat checks 
 - `localization:check`: 256 UI keys have real tm/ru/en DB values.
 - Live `localization:verify`: PASS tm/ru/en. Manager checking is read-only; synthetic empty/limited trees are tested solely in isolated browser roots. Existing Profile/Users localization checks retain their established disposable account/upload workflow.
 - Build/typecheck/client JS syntax: PASS.
-- Final full production suite: FINAL_SUITE_COUNTS.
+- Final full production suite: **56 unit/integration + 58 core browser + 5 Users browser = 119 passed, no skips, npm exit 0**.
+- Additional production Details visual test: **1 passed, exit 0**, with light/dark captures at 1440px and 375px. Desktop/light and mobile/dark screenshots were visually inspected; text wraps and actions remain within the dialog. Captures: `artifacts/media-details-{theme}-{width}.png`; log: `/tmp/media-continuation-dialogs.log`.
 
 Logs: `/tmp/media-continuation-browser-final.log`, `/tmp/media-continuation-build-final.log`, `/tmp/media-continuation-live.log`, `/tmp/media-continuation-production.log`, `/tmp/media-continuation-production.exit`.
 
@@ -165,7 +166,7 @@ Updated: `src/cpanel/media/browser.ts`, `src/media/store.ts` (read mapping only)
 
 ## Architecture status and stop condition
 
-FINAL_ARCHITECTURE_STATUS
+The Media File Manager **read architecture and UI are validated**, within the documented existing public-serving boundary, but the Media module is **not yet complete**.
 
 The following require explicit approval before backend implementation:
 

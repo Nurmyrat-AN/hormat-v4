@@ -221,3 +221,5 @@ Migration 016 adds `cpanel.permissions.access.view`, `cpanel.permissions.access.
 Migration 017 introduces 54 `cpanel.media.*` UI and permission metadata keys with 162 real tm/ru/en values. Current totals supersede migration 016: 264 canonical keys, 792 translations and 249 used UI keys. PostgreSQL remains the source; no language dictionary files exist.
 
 Media continuation migration 018 adds seven real tm/ru/en keys (21 values): refresh, notFound, backToRoot, mime, dimensions, children and cacheWarning in cpanel.media. Current totals: 271 canonical keys / 813 values / 256 used UI keys. New manager filesystem fixture tests are isolated; live manager checks are read-only.
+
+Media activation: migration 019 adds 13 keys / 39 values. Totals: 284 canonical keys / 852 values / 268 used UI keys, all tm/ru/en.

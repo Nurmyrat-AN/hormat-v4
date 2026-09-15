@@ -64,7 +64,7 @@ No audit/system-event infrastructure currently exists. Permission-change history
 
 ## Localization and verification
 
-Migration 016 adds seven keys / 21 real tm/ru/en values. Current totals after Media UI migration 017: 271 keys / 813 translations; 256 used UI keys. Database seed and running-server cache must be updated together. `localization:verify` exercises real saves and self/read-only messages on the actual server.
+Migration 016 adds seven keys / 21 real tm/ru/en values. Current totals after Media activation migration 019: 284 keys / 852 translations; 268 used UI keys. Database seed and running-server cache must be updated together. `localization:verify` exercises real saves and self/read-only messages on the actual server.
 
 Tests include isolated-schema service/transaction checks, registry validation, the strict boolean matrix for every current definition, real administrator grant/revocation lifecycle, inactive-user preservation, effective grant counts, malformed/deleted-target checks and browser coverage for all languages, saved rows, readonly/self/target protection, CSRF, unknown/system injections, immediate grant/revoke behavior, failure/retry, duplicate prevention, search, themes and mobile. Run the full [README verification workflow](../README.md) and existing Users authorization suite.
 

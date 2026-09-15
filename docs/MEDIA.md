@@ -107,3 +107,7 @@ See [MEDIA_UPLOAD_REPORT.md](../MEDIA_UPLOAD_REPORT.md) for final executed resul
 ## Managed deletion
 
 `deleteManagedFile(url, trustedDestination)` only removes exact generated UUID filenames in the supplied trusted final namespace, after checking directory/file types with lstat. It returns false for unknown/external/legacy URLs, missing files and symlinks. It never accepts a browser destination. Profile uses it for post-COMMIT replacement cleanup and failed-UPDATE compensation.
+
+## File Manager activation boundary
+
+File Manager now has a separate permanent upload operation: `/cpanel/api/media/files?path=...`, any format, 10,485,760 bytes maximum. This does not change `/cpanel/media/upload`, its response, cache ownership or trusted finalization. Controlled public serving also supports safe human filenames; cache token aliases/expiry and private physical records remain protected. Public responses use no-store because names can now be changed/deleted. See architecture section 38 and [activation report](../MEDIA_FILE_MANAGER_ACTIVATION_REPORT.md).

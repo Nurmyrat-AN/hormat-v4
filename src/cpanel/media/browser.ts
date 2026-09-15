@@ -1,23 +1,17 @@
 import path from 'node:path';
-import {lstat,opendir,realpath} from 'node:fs/promises';
+import {lstat,opendir} from 'node:fs/promises';
+import {BrowseError, hiddenMediaName as hidden, resolveMediaPath} from '../../media/paths.js';
+export {BrowseError} from '../../media/paths.js';
 import {mediaStore} from '../../media/index.js';
 import {describeFile,inlineMimeTypes} from '../../media/metadata.js';
 import {managedMediaLocations,temporaryMediaLocation} from './locations.js';
 import {MediaStore} from '../../media/store.js';
 
-export class BrowseError extends Error { constructor(readonly status=404){super('Media browsing failed');} }
 export interface MediaEntry {name:string;path:string;parent:string;folder:boolean;size:number|null;modified:string;url:string|null;image:boolean;temporary:boolean;managed:boolean;type:string}
-const hidden=(name:string)=>name.startsWith('.')||['thumbs.db','desktop.ini'].includes(name.toLowerCase());
 /** No symlinks (including internal ones), hidden infrastructure or private cache records. */
 export class MediaBrowser {
  constructor(readonly root=mediaStore.root){}
- async resolve(relative:string):Promise<string>{
-  if(relative.length>2048||/^[a-zA-Z]:/.test(relative)||relative.includes('\\')||/[\x00-\x1f\x7f]/.test(relative)||relative.startsWith('/')||relative.split('/').some(s=>s==='..'||s==='.'||hidden(s)&&s!==''))throw new BrowseError(400);
-  if(relative && relative.split('/').some(s=>!s))throw new BrowseError(400);
-  let current=await realpath(this.root);
-  for(const segment of relative.split('/').filter(Boolean)){current=path.join(current,segment);if((await lstat(current)).isSymbolicLink())throw new BrowseError();}
-  return current;
- }
+ async resolve(relative:string):Promise<string>{return resolveMediaPath(this.root,relative);}
  async entry(relative:string):Promise<MediaEntry>{
   const file=await this.resolve(relative),info=await lstat(file);if(!info.isDirectory()&&!info.isFile())throw new BrowseError();
   const parts=relative.split('/'),name=parts.at(-1)??'',temporary=parts[0]===temporaryMediaLocation;
