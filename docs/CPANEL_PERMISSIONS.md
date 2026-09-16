@@ -64,8 +64,12 @@ No audit/system-event infrastructure currently exists. Permission-change history
 
 ## Localization and verification
 
-Migration 016 adds seven keys / 21 real tm/ru/en values. Current totals after Media activation migration 019: 284 keys / 852 translations; 268 used UI keys. Database seed and running-server cache must be updated together. `localization:verify` exercises real saves and self/read-only messages on the actual server.
+Migration 016 adds seven keys / 21 real tm/ru/en values. Current totals after Media activation migration 020: 285 keys / 855 translations; 269 used UI keys. Database seed and running-server cache must be updated together. `localization:verify` exercises real saves and self/read-only messages on the actual server.
 
 Tests include isolated-schema service/transaction checks, registry validation, the strict boolean matrix for every current definition, real administrator grant/revocation lifecycle, inactive-user preservation, effective grant counts, malformed/deleted-target checks and browser coverage for all languages, saved rows, readonly/self/target protection, CSRF, unknown/system injections, immediate grant/revoke behavior, failure/retry, duplicate prevention, search, themes and mobile. Run the full [README verification workflow](../README.md) and existing Users authorization suite.
 
 Media UI adds five registered assignable booleans. Only media.view currently protects read-only manager access; its four mutation definitions do not activate endpoints. The registry-driven complete Save contract now contains twelve assignable keys. See [Media UI](CPANEL_MEDIA.md).
+
+Media Move adds the independent assignable boolean `media.move` to the existing Media group. Permissions Management renders and saves it from the registry without a separate catalog/UI list. There are now 13 assignable booleans plus the protected `superuser` definition; no automatic grants are inserted.
+
+Vendors UI registers `vendors.view/create/update/status` as four future assignable boolean definitions with tm/ru/en metadata. The view permission gates the direct UI-preview route and other grants control preview affordances; no Vendor mutation backend exists. The registry now has 17 assignable definitions plus protected Super User. Source Products has no definitions.

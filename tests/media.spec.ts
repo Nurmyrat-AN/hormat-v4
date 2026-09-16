@@ -119,7 +119,7 @@ test('uploader real progress, wait-on-save, reselection/remove/error retry, tran
   await page.screenshot({ path: 'artifacts/media-mobile.png', fullPage: true, animations: 'disabled' });
   const after = (await pool.query('SELECT to_jsonb(u) profile, to_jsonb(a) auth FROM cpanel_users u JOIN cpanel_user_auth a ON a.user_id=u.id WHERE u.id=$1', [authUser.id])).rows[0];
   expect(after).toEqual(before);
-  await expect(page.locator('[data-navigation-id="media"]')).toHaveAttribute('data-availability', 'disabled');
+  await expect(page.locator('[data-navigation-id="media"]')).toHaveAttribute('data-availability', 'enabled');
 });
 
 test('reselection during pending Save uses only the latest token; cancellation clears in-flight selection', async ({ page, context, authUser, baseURL }) => {

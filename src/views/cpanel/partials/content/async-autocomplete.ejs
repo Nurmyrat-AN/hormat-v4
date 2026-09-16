@@ -1,0 +1,11 @@
+<div class="async-autocomplete" id="<%= id %>-control" data-placeholder="<%= placeholder %>">
+ <div class="d-flex gap-1"><input id="<%= id %>" data-ac-input class="form-control" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="<%= id %>-options" autocomplete="off" placeholder="<%= placeholder %>" maxlength="200"><button data-ac-clear type="button" class="btn btn-outline-secondary" aria-label="<%= t('cpanel.autocomplete.clear') %>" hidden>×</button></div>
+ <div data-ac-panel class="async-panel" hidden>
+  <div class="small text-body-secondary px-2 py-1"><%= t('cpanel.autocomplete.search') %></div>
+  <div id="<%= id %>-options" role="listbox" aria-labelledby="<%= id %>"></div>
+  <div data-ac-status role="status" class="small text-body-secondary px-2 py-1"></div>
+  <button data-ac-retry type="button" class="btn btn-sm btn-outline-secondary m-2" hidden><%= t('cpanel.autocomplete.retry') %></button>
+  <button data-ac-more type="button" class="btn btn-sm btn-outline-secondary m-2" hidden><%= t('cpanel.autocomplete.more') %></button>
+ </div>
+ <span hidden data-ac-label="search"><%= t('cpanel.autocomplete.search') %></span><span hidden data-ac-label="loading"><%= t('cpanel.media.loading') %></span><span hidden data-ac-label="empty"><%= t('cpanel.autocomplete.empty') %></span><span hidden data-ac-label="failed"><%= t('cpanel.autocomplete.failed') %></span>
+</div>

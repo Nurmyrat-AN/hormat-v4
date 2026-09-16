@@ -1,0 +1,13 @@
+<section class="card" style="max-width: 780px">
+ <div class="card-body p-4">
+  <h2 class="h5 mb-4"><%= t('cpanel.settings.defaults') %></h2>
+  <form id="settings-form" data-csrf="<%= cpanelSession.csrf_token %>" data-saved="<%= t('cpanel.settings.saved') %>" data-failed="<%= t('cpanel.settings.failed') %>" data-invalid="<%= t('cpanel.settings.invalid') %>" data-currency="<%= t('cpanel.settings.invalidCurrency') %>" data-incomplete="<%= t('cpanel.settings.incomplete') %>" data-cache="<%= t('cpanel.languages.refreshPending') %>">
+   <fieldset <%= canUpdate?'':'disabled' %>>
+    <div class="mb-3"><label for="settings-language" class="form-label"><%= t('cpanel.settings.language') %></label><select id="settings-language" name="language" class="form-select"><% for(const option of data.options.languages){ %><option value="<%= option.code %>" <%= data.defaults.language===option.code?'selected':'' %>><%= option.name %> (<%= option.code %>)</option><% } %></select></div>
+    <div class="mb-3"><label for="settings-currency" class="form-label"><%= t('cpanel.settings.currency') %></label><select id="settings-currency" name="currency" class="form-select"><option value="" <%= data.defaults.currency?'disabled':'selected' %>><%= t('cpanel.currencies.missing') %></option><% for(const option of data.options.currencies){ %><option value="<%= option.id %>" <%= data.defaults.currency===option.id?'selected':'' %>><%= option.name %> (<%= option.code %>)</option><% } %></select></div>
+    <% for(const kind of ['payment','delivery','orderStatus']){ %><div class="mb-3"><label for="settings-<%= kind %>" class="form-label"><%= kind==='orderStatus'?t('cpanel.settings.orderStatus'):kind==='payment'?t('cpanel.settings.payment'):t('cpanel.settings.delivery') %></label><select id="settings-<%= kind %>" name="<%= kind %>" class="form-select"><option value=""><%= t('cpanel.settings.noDefault') %></option><% for(const option of data.options[kind]){ %><option value="<%= option.id %>" <%= data.defaults[kind]===option.id?'selected':'' %>><%= option.name %></option><% } %></select></div><% } %>
+   </fieldset>
+   <div class="d-flex align-items-center justify-content-end gap-3 mt-4"><p id="settings-status" class="small mb-0" role="status"></p><% if(canUpdate){ %><button id="settings-save" class="btn btn-success" type="submit" disabled><span data-idle><%= t('cpanel.settings.save') %></span><span data-busy hidden><%= t('cpanel.content.saving') %></span></button><% } %></div>
+  </form>
+ </div>
+</section>

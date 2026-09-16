@@ -1,0 +1,37 @@
+<div id="vendor-dialog" class="modal fade vendor-dialog" tabindex="-1" aria-labelledby="vendor-dialog-title"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+ <div class="modal-header"><h2 id="vendor-dialog-title" class="modal-title fs-5"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t('cpanel.users.close') %>"></button></div>
+ <div class="modal-body">
+  <form id="vendor-form" autocomplete="off" novalidate>
+   <div data-vendor-section="editor">
+    <% for(const field of [{key:'name',label:t('cpanel.vendors.name'),type:'text'},{key:'url',label:t('cpanel.vendors.url'),type:'url'},{key:'username',label:t('cpanel.vendors.username'),type:'text'}]){ %><div class="mb-3"><label for="vendor-<%= field.key %>" class="form-label"><%= field.label %></label><input id="vendor-<%= field.key %>" data-field="<%= field.key %>" type="<%= field.type %>" class="form-control" autocomplete="off"></div><% } %>
+    <label for="vendor-password" class="form-label"><%= t('cpanel.login.password') %></label>
+    <p id="vendor-password-state" class="small text-body-secondary" hidden></p>
+    <div class="vendor-password"><input id="vendor-password" type="password" class="form-control" autocomplete="new-password"><button class="shell-icon-button" type="button" data-password-toggle aria-controls="vendor-password" aria-pressed="false" aria-label="<%= t('cpanel.login.showPassword') %>" data-show="<%= t('cpanel.login.showPassword') %>" data-hide="<%= t('cpanel.login.hidePassword') %>" disabled><span class="icon-show"><%- include('../login-icon',{name:'eye'}) %></span><span class="icon-hide" hidden><%- include('../login-icon',{name:'eye-off'}) %></span></button></div>
+    <p id="vendor-password-help" class="small text-body-secondary mt-2"><%= t('cpanel.vendors.keepPassword') %></p>
+    <div id="vendor-initial-status" class="mt-3"><label class="form-label" for="vendor-active"><%= t('cpanel.users.status') %></label><select id="vendor-active" class="form-select"><option value="active"><%= t('cpanel.users.active') %></option><option value="inactive"><%= t('cpanel.users.inactive') %></option></select></div>
+   </div>
+  </form>
+  <div data-vendor-section="status"><p id="vendor-status-name" class="fw-semibold"></p><dl class="vendor-details"><dt><%= t('cpanel.users.currentStatus') %></dt><dd id="vendor-current-status"></dd><dt><%= t('cpanel.users.newStatus') %></dt><dd id="vendor-next-status"></dd></dl></div>
+  <div data-vendor-section="reset">
+   <p><%= t('cpanel.vendors.supplier') %>: <strong id="vendor-reset-name"></strong></p>
+   <div class="alert alert-warning">
+    <p><%= t('cpanel.vendors.resetPause') %></p>
+    <ul class="mb-0">
+     <li><%= t('cpanel.vendors.resetStock') %></li>
+     <li><%= t('cpanel.vendors.resetMovements') %></li>
+     <li><%= t('cpanel.vendors.resetCheckpoint') %></li>
+     <li><%= t('cpanel.vendors.resetDates') %></li>
+    </ul>
+   </div>
+   <p><%= t('cpanel.vendors.resetReplay') %></p>
+   <p class="fw-semibold mb-0"><%= t('cpanel.vendors.resetKeep') %></p>
+  </div>
+  <div data-vendor-section="details">
+   <h3 class="vendor-section-title"><%= t('cpanel.vendors.supplier') %></h3><dl class="vendor-details"><dt><%= t('cpanel.vendors.name') %></dt><dd data-detail="name"></dd><dt><%= t('cpanel.users.status') %></dt><dd data-detail="status"></dd></dl>
+   <h3 class="vendor-section-title"><%= t('cpanel.vendors.connection') %></h3><dl class="vendor-details"><dt><%= t('cpanel.vendors.url') %></dt><dd data-detail="url"></dd><dt><%= t('cpanel.vendors.username') %></dt><dd data-detail="username"></dd><dt><%= t('cpanel.login.password') %></dt><dd data-detail="passwordConfigured"></dd></dl>
+   <h3 class="vendor-section-title"><%= t('cpanel.vendors.synchronization') %></h3><dl class="vendor-details"><dt><%= t('cpanel.vendors.health') %></dt><dd data-detail="healthLabel"></dd><dt><%= t('cpanel.vendors.lastSync') %></dt><dd data-detail="lastSync"></dd><dt><%= t('cpanel.vendors.lastOperation') %></dt><dd data-detail="lastOperation"></dd><dt><%= t('cpanel.vendors.lag') %></dt><dd data-detail="lag"></dd><dt><%= t('cpanel.vendors.sequence') %></dt><dd class="vendor-opaque" data-detail="lastSequence"></dd></dl>
+  </div>
+  <p id="vendor-notice" class="alert alert-secondary mt-3 mb-0" role="status" hidden></p>
+ </div>
+ <div class="modal-footer"><button id="vendor-cancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" data-cancel="<%= t('cpanel.users.cancel') %>" data-close="<%= t('cpanel.users.close') %>"><%= t('cpanel.users.close') %></button><button id="vendor-save" type="button" class="btn btn-success" disabled><%= t('cpanel.profile.actions.save') %></button></div>
+</div></div></div>

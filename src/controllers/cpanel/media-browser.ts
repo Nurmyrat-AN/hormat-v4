@@ -12,7 +12,7 @@ export const browseMedia:RequestHandler=async(request,response)=>{
   const href=(location:string,selection='')=>'/cpanel/media?'+new URLSearchParams({path:location,...(selection?{select:selection}:{})});
   const breadcrumbs=[{name:response.locals.t('cpanel.navigation.media'),href:href('')}];let location='';
   for(const name of path.split('/').filter(Boolean)){location=[location,name].filter(Boolean).join('/');breadcrumbs.push({name,href:href(location)});}
-  const capabilities={upload:await response.locals.permissions.hasPermission('media.upload'),new:await response.locals.permissions.hasPermission('media.create_folder'),rename:await response.locals.permissions.hasPermission('media.rename'),delete:await response.locals.permissions.hasPermission('media.delete')};
+  const capabilities={move:await response.locals.permissions.hasPermission('media.move'),upload:await response.locals.permissions.hasPermission('media.upload'),new:await response.locals.permissions.hasPermission('media.create_folder'),rename:await response.locals.permissions.hasPermission('media.rename'),delete:await response.locals.permissions.hasPermission('media.delete')};
   response.render(request.query.partial==='1'?'cpanel/pages/media-results':'cpanel/pages/media',{...result,query,searchScope:scope,sort,href,breadcrumbs,capabilities,selectedPath:select});
  }catch(error){const status=readStatus(error);response.status(status).render(request.query.partial==='1'?'cpanel/pages/media-error-content':'cpanel/pages/media-error',{notFound:status===404});}
 };

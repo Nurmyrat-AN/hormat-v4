@@ -1,0 +1,45 @@
+import {test,expect,type Page} from '@playwright/test';
+import {spawn,type ChildProcess} from 'node:child_process';
+import {once} from 'node:events';
+import {createServer} from 'node:net';
+import {randomUUID} from 'node:crypto';
+import {mkdir,writeFile,readFile,rm} from 'node:fs/promises';
+import path from 'node:path';
+import {pool} from '../src/database/pool.js';
+import {bootstrapSuperuser} from '../src/cpanel/auth/bootstrap.js';
+import {sessions} from '../src/cpanel/auth/sessions.js';
+test.use({actionTimeout:10000});
+const folder='brands-live-'+randomUUID(),root=path.resolve('.test-media',folder),pixel=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8x8AAAAASUVORK5CYII=','base64');
+test.beforeAll(async()=>{await mkdir(root,{recursive:true});for(const name of ['a.png','b.png','c.png'])await writeFile(path.join(root,name),pixel);await writeFile(path.join(root,'text.txt'),'not image');});
+test.afterAll(async()=>{await rm(root,{recursive:true,force:true});});
+async function login(context:any,baseURL:string){const user=await bootstrapSuperuser({name:'Brands activation test',email:randomUUID()+'@example.invalid',password:randomUUID()});const session=await sessions.create(user.id);await context.addCookies([{name:process.env.TEST_PRODUCTION==='1'&&!process.env.BRANDS_VERIFY_URL?'__Secure-hormat_cpanel':'hormat_cpanel',value:session.token,domain:new URL(baseURL).hostname,path:'/cpanel',secure:process.env.TEST_PRODUCTION==='1'&&!process.env.BRANDS_VERIFY_URL,httpOnly:true,sameSite:'Lax'},{name:'hormat_lang',value:'en',url:baseURL}]);return {id:user.id,csrf:session.session.csrf_token};}
+async function cleanup(page:Page,id:string){await page.goto('about:blank').catch(()=>{});await pool.query('DELETE FROM brand_media WHERE brand_id IN(SELECT id FROM brands WHERE created_by=$1)',[id]);await pool.query('DELETE FROM brand_translations WHERE brand_id IN(SELECT id FROM brands WHERE created_by=$1)',[id]);await pool.query('DELETE FROM brands WHERE created_by=$1',[id]);await pool.query('DELETE FROM cpanel_users WHERE id=$1',[id]);}
+async function api(page:Page,method:string,url:string,body?:unknown,csrf?:string){return page.evaluate(async({method,url,body,csrf})=>{const response=await fetch(url,{method,headers:{'Content-Type':'application/json',...(csrf?{'X-CSRF-Token':csrf}:{})},...(body===undefined?{}:{body:JSON.stringify(body)})});return {status:response.status,data:await response.json().catch(()=>null)};},{method,url,body,csrf});}
+const stored=async(id:string)=>(await pool.query('SELECT * FROM brands WHERE id=$1',[id])).rows[0];
+const gallery=async(id:string)=>(await pool.query('SELECT media_reference FROM brand_media WHERE brand_id=$1 ORDER BY sort_order',[id])).rows.map(r=>r.media_reference);
+async function tab(page:Page,key:string){await page.locator('[data-tab='+key+']').click();await expect(page.locator('[data-pane='+key+']')).toBeVisible();}
+async function open(page:Page,id:string){await page.locator('[data-brand-id="'+id+'"] .brand-actions > button').click();await page.locator('[data-brand-id="'+id+'"] [data-brand-action=edit]').click();await expect(page.locator('#brand-dialog')).toBeVisible();await expect(page.locator('#brand-dialog')).toHaveAttribute('data-entity-id',id);}
+async function expand(page:Page){if(await page.locator('[data-translatable-field="brand-name"] [data-translation-toggle]').getAttribute('aria-expanded')==='false')await page.locator('[data-translatable-field="brand-name"] [data-translation-toggle]').click();}
+async function save(page:Page,key:string){const endpoint=key==='translations'?'/translations':key==='gallery'?'/gallery':'';const response=page.waitForResponse(r=>r.url().includes('/cpanel/api/brands')&&r.request().method()!=='GET'&&(!endpoint||r.url().endsWith(endpoint)));await page.locator(key==='translations'?'[data-translatable-field="brand-name"] [data-save-field]':'[data-save='+key+']').click();expect((await response).ok()).toBe(true);await expect(page.locator(key==='translations'?'[data-translatable-field="brand-name"] [data-save-field]':'[data-save='+key+']')).toBeDisabled();}
+async function pick(page:Page,files:string[]){await expect(page.locator('[data-media-picker]')).toBeVisible();await page.locator('[data-picker-path="'+folder+'"]').click();for(const file of files)await page.locator('[data-picker-path="'+folder+'/'+file+'"]').click();await page.locator('[data-picker-confirm]').click();await expect(page.locator('[data-media-picker]')).toBeHidden();}
+async function action(page:Page,file:string,kind:string){const item=page.locator('[data-media-path="'+folder+'/'+file+'"]');await item.locator('.gallery-menu > button').click();await item.locator('[data-gallery-action='+kind+']').click();}
+async function close(page:Page){await page.locator('#brand-dialog .btn-close[data-bs-dismiss]').click();await expect(page.locator('#brand-dialog')).toBeHidden();}
+async function reopen(page:Page,id:string){await close(page);await page.reload();await open(page,id);}
+
+test('separate SEO tab: independent base saves, inline translations, Create unlock and light/dark',async({page,context,baseURL})=>{
+ const actor=await login(context,baseURL!);try{
+ await page.goto('/cpanel/brands');await page.locator('#brands-add').click();await expect(page.locator('[data-tab=seo]')).toBeDisabled();await expect(page.locator('#brand-pane-basic #brand-slug')).toHaveCount(0);await page.locator('#brand-name').fill('SEO scope '+randomUUID());await save(page,'basic');const id=(await page.locator('#brand-dialog').getAttribute('data-entity-id'))!;await expect(page.locator('#brand-dialog')).toBeVisible();await expect(page.locator('[data-tab=seo]')).toBeEnabled();
+ const before=await stored(id);await page.locator('#brand-name').fill('Basic pending');await tab(page,'seo');await expect(page.locator('#brand-pane-seo #brand-slug')).toBeVisible();await page.locator('#brand-slug').fill('scope-'+id);await page.locator('#brand-seo_title').fill('SEO title');await page.locator('#brand-seo_description').fill('SEO description');await save(page,'seo');expect((await stored(id)).name).toBe(before.name);await expect(page.locator('[data-tab-state=basic]')).toHaveText('Unsaved');
+ const title=page.locator('[data-translatable-field="brand-seo_title"]'),description=page.locator('[data-translatable-field="brand-seo_description"]');await title.locator('[data-translation-toggle]').click();await title.locator('[data-translation-input=ru]').fill('Заголовок');await title.locator('[data-save-field]').click();await expect(title.locator('[data-save-field]')).toBeDisabled();await description.locator('[data-translation-toggle]').click();await description.locator('[data-translation-input=tm]').fill('Beýan');await description.locator('[data-save-field]').click();await expect(description.locator('[data-save-field]')).toBeDisabled();
+ await page.locator('#brand-seo_title').fill('SEO pending');await tab(page,'basic');await save(page,'basic');expect((await stored(id)).seo_title).toBe('SEO title');await expect(page.locator('[data-tab-state=seo]')).toHaveText('Unsaved');await tab(page,'seo');await expect(page.locator('#brand-seo_title')).toHaveValue('SEO pending');await save(page,'seo');
+ for(const theme of ['light','dark']){await page.evaluate(theme=>document.documentElement.dataset.bsTheme=theme,theme);await expect(page.locator('[data-save=seo]')).toHaveText('Save SEO');await expect(page.locator('#brand-pane-seo')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'artifacts/brand-seo-tab-'+theme+'.png'});}
+ await close(page);await page.reload();await open(page,id);await expect(page.locator('#brand-name')).toHaveValue('Basic pending');await tab(page,'seo');await expect(page.locator('#brand-seo_title')).toHaveValue('SEO pending');await title.locator('[data-translation-toggle]').click();await expect(title.locator('[data-translation-input=ru]')).toHaveValue('Заголовок');
+ }finally{await cleanup(page,actor.id);}
+});
+
+test('SEO labels use actual tm ru en DB values on affected live page',async({page,context,baseURL})=>{
+ const base=process.env.BRANDS_VERIFY_URL??baseURL!,actor=await login(context,base);try{
+ await page.goto(base+'/cpanel/brands');const id=(await api(page,'POST','/cpanel/api/brands',{name:'SEO localization '+randomUUID()},actor.csrf)).data.row.id;
+ for(const language of ['tm','ru','en']){await context.addCookies([{name:'hormat_lang',value:language,url:base}]);await page.goto(base+'/cpanel/brands');await open(page,id);const corpus=await page.locator('body').textContent();const values=(await pool.query("SELECT translation_value FROM interface_translations WHERE language_code=$1 AND translation_key IN('cpanel.brands.seo','cpanel.brands.slug','cpanel.brands.seoTitle','cpanel.brands.seoDescription','cpanel.brands.attachedProducts','cpanel.brands.productsLater','cpanel.brands.saveSeo')",[language])).rows;for(const row of values)expect(corpus).toContain(row.translation_value);expect(corpus).not.toContain('cpanel.brands.');await close(page);}
+ }finally{await cleanup(page,actor.id);}
+});

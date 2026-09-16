@@ -1,0 +1,10 @@
+import {Router,json,type ErrorRequestHandler} from 'express';
+import {requireCpanelAuth,requirePermission,requireCsrf} from '../../cpanel/auth/http.js';
+import {listTranslations,detailTranslation,saveTranslation} from '../../controllers/cpanel/interface-translations.js';
+export const interfaceTranslationsApi=Router();
+interfaceTranslationsApi.use(requireCpanelAuth);
+interfaceTranslationsApi.get('/',requirePermission('interface_translations.view'),listTranslations);
+interfaceTranslationsApi.get('/:key',requirePermission('interface_translations.view'),detailTranslation);
+interfaceTranslationsApi.put('/:key',requirePermission('interface_translations.update'),requireCsrf,json({limit:'512kb'}),saveTranslation);
+const invalid:ErrorRequestHandler=(error,_request,response,next)=>{if(error?.type==='entity.parse.failed'||error?.type==='entity.too.large'){response.status(400).json({success:false,code:'TRANSLATION_INVALID'});return;}next(error);};
+interfaceTranslationsApi.use(invalid);

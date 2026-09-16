@@ -1,13 +1,15 @@
 import path from 'node:path';
+import { moveNoReplace } from './move-filesystem.js';
 import { mkdir, lstat, link, unlink, rmdir, rm, opendir, mkdtemp } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import type { Request } from 'express';
 import { MediaBrowser } from './browser.js';
-import { BrowseError, validateMediaPath } from '../../media/paths.js';
+import { BrowseError, validateMediaPath, hiddenMediaName } from '../../media/paths.js';
 import { receiveFile } from '../../media/multipart.js';
 import { MediaError } from '../../media/errors.js';
-import { tokenPattern } from '../../media/store.js';
+import { tokenPattern, MediaStore } from '../../media/store.js';
+import {mediaStore} from '../../media/index.js';
 
 const execute = promisify(execFile);
 export const directUploadMaxBytes = 10 * 1024 * 1024;
@@ -16,9 +18,10 @@ export class ManagerError extends Error {
 }
 export function managerError(error: unknown, fallback: string): ManagerError {
  if (error instanceof ManagerError) return error;
- if (error instanceof MediaError) return new ManagerError(error.code, error.code === 'MEDIA_FILE_TOO_LARGE' ? 413 : 400);
+ if (error instanceof MediaError) return new ManagerError(error.code, error.code === 'MEDIA_FILE_TOO_LARGE' ? 413 : error.code === 'MEDIA_UPLOAD_FAILED' ? 500 : 400);
  if (error instanceof BrowseError) return new ManagerError(error.status === 400 ? 'MEDIA_INVALID_PATH' : 'MEDIA_NOT_FOUND', error.status);
  const code = (error as NodeJS.ErrnoException)?.code;
+ if(code==='MEDIA_MOVE_INCOMPLETE') return new ManagerError(code,500);
  return code === 'EEXIST' ? new ManagerError('MEDIA_ALREADY_EXISTS', 409) : code === 'ENOENT' || code === 'ENOTDIR' ? new ManagerError('MEDIA_NOT_FOUND', 404) : code === 'ENOTEMPTY' ? new ManagerError('MEDIA_FOLDER_NOT_EMPTY',409) : code === 'EACCES' || code === 'EPERM' ? new ManagerError('MEDIA_PERMISSION_DENIED',403) : new ManagerError(fallback,500);
 }
 export function validateName(name: string): void {
@@ -46,6 +49,13 @@ export class MediaManager extends MediaBrowser {
   if(parts[0] === 'cache' && parts.length > 2 && tokenPattern.test(parts[1])) throw new ManagerError('MEDIA_CACHE_PROTECTED',403);
   return relative;
  }
+ private async rejectCacheAliasCollision(parent: string, name: string) {
+  if(parent !== 'cache') return;
+  const match=name.match(/^(.+)\.([a-z0-9]+)$/);if(!match||!tokenPattern.test(match[1]))return;
+  try {await new MediaStore(this.root,mediaStore.ttlHours).preview(match[1],match[2]);}
+  catch(error){if(error instanceof MediaError&&error.code==='MEDIA_CACHE_NOT_FOUND')return;throw error;}
+  throw new ManagerError('MEDIA_ALREADY_EXISTS',409);
+ }
  async createFolder(parent: string, name: string) {
   return this.serialized(async () => {
    const relative = this.targetPath(parent,name), directory = await this.directory(parent);
@@ -56,6 +66,7 @@ export class MediaManager extends MediaBrowser {
   return this.serialized(async () => {
    if(source === '') throw new ManagerError('MEDIA_ROOT_PROTECTED',403);
    const item = await this.entry(source), relative = this.targetPath(item.parent,name);
+   await this.rejectCacheAliasCollision(item.parent,name);
    const oldPath = await this.resolve(source), directory = await this.directory(item.parent), newPath = path.join(directory,name);
    // GNU coreutils uses renameat2(RENAME_NOREPLACE) on supported Linux filesystems.
    // --no-copy forbids a cross-filesystem copy/delete fallback; --none-fail reports collisions.
@@ -66,6 +77,33 @@ export class MediaManager extends MediaBrowser {
     try { await lstat(oldPath); } catch(missing) { throw missing; }
     throw new ManagerError('MEDIA_RENAME_FAILED',500);
    }
+   return this.entry(relative);
+  });
+ }
+ async destinationFolders(relative: string) {
+  const directory = await this.directory(relative), folders: {name:string;path:string}[] = [];
+  let limited = false, scanned = 0;
+  for await (const child of await opendir(directory)) {
+   if (++scanned > 10000 || folders.length >= 500) { limited = true; break; }
+   if (!child.isDirectory() || hiddenMediaName(child.name)) continue;
+   const location = [relative,child.name].filter(Boolean).join('/');
+   try { this.targetPath(location,'probe'); await this.directory(location); folders.push({name:child.name,path:location}); } catch { /* Private or unavailable folder. */ }
+  }
+  folders.sort((a,b)=>a.name.localeCompare(b.name));
+  return {path:relative,folders,limited};
+ }
+ async moveItem(source: string, destination: string, authorize: () => Promise<void> = async()=>{}) {
+  return this.serialized(async () => {
+   await authorize();
+   if(source === '') throw new ManagerError('MEDIA_ROOT_PROTECTED',403);
+   const item = await this.entry(source);
+   validateMediaPath(destination);
+   if(destination === item.parent) throw new ManagerError('MEDIA_SAME_FOLDER');
+   if(item.folder && (destination === source || destination.startsWith(source+'/'))) throw new ManagerError('MEDIA_MOVE_SELF');
+   const relative = this.targetPath(destination,item.name);
+   const oldPath = await this.resolve(source), directory = await this.directory(destination);
+   await this.rejectCacheAliasCollision(destination,item.name);
+   await moveNoReplace(oldPath,path.join(directory,item.name),authorize);
    return this.entry(relative);
   });
  }
@@ -100,6 +138,7 @@ export class MediaManager extends MediaBrowser {
    return await this.serialized(async () => {
     await authorize();
     const relative = this.targetPath(parent,name), directory = await this.directory(parent);
+    await this.rejectCacheAliasCollision(parent,name);
     // Atomic exclusive publication of complete bytes. Existing files are never overwritten.
     await link(file,path.join(directory,name));
     return this.entry(relative);

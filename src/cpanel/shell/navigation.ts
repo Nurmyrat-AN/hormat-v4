@@ -42,28 +42,36 @@ export const navigationRoadmap: NavigationGroup[] = [
         translationKey: "cpanel.navigation.categories",
         icon: "categories",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "categories.view",
+        href: "/cpanel/categories"
       },
       {
         id: "brands",
         translationKey: "cpanel.navigation.brands",
         icon: "tag",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "brands.view",
+        href: "/cpanel/brands"
       },
       {
         id: "media",
         translationKey: "cpanel.navigation.media",
         icon: "image",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "media.view",
+        href: "/cpanel/media"
       },
       {
         id: "discounts",
         translationKey: "cpanel.navigation.discounts",
         icon: "discount",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "discounts.view",
+        href: "/cpanel/discounts"
       }
     ]
   },
@@ -76,14 +84,18 @@ export const navigationRoadmap: NavigationGroup[] = [
         translationKey: "cpanel.navigation.vendors",
         icon: "store",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        href: "/cpanel/vendors",
+        permission: "vendors.view"
       },
       {
         id: "sourceProducts",
         translationKey: "cpanel.navigation.sourceProducts",
         icon: "source",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "source_products.view",
+        href: "/cpanel/source-products"
       }
     ]
   },
@@ -180,26 +192,30 @@ export const navigationRoadmap: NavigationGroup[] = [
     id: "marketplace",
     translationKey: "cpanel.navigation.group.marketplace",
     items: [
+      {id:'currencies',translationKey:'cpanel.currencies.title',icon:'card',kind:'submenu',children:[
+        {id:'frontendCurrencies',translationKey:'cpanel.currencies.frontend',icon:'globe',kind:'page',status:'enabled',href:'/cpanel/currencies/frontend',permission:'currencies.frontend.view'},
+        {id:'vendorCurrencyRates',translationKey:'cpanel.currencies.vendors',icon:'store',kind:'page',status:'enabled',href:'/cpanel/currencies/vendors',permission:'currencies.vendor_rates.view'},
+      ]},
       {
         id: "deliveryTypes",
         translationKey: "cpanel.navigation.deliveryTypes",
         icon: "truck",
         kind: "page",
-        status: "disabled"
+        status: "enabled", href: "/cpanel/delivery-types", permission: "delivery_types.view"
       },
       {
         id: "paymentTypes",
         translationKey: "cpanel.navigation.paymentTypes",
         icon: "card",
         kind: "page",
-        status: "disabled"
+        status: "enabled", href: "/cpanel/payment-types", permission: "payment_types.view"
       },
       {
         id: "orderStatuses",
         translationKey: "cpanel.navigation.orderStatuses",
         icon: "checklist",
         kind: "page",
-        status: "disabled"
+        status: "enabled", href: "/cpanel/order-statuses", permission: "order_statuses.view"
       },
       {
         id: "restrictions",
@@ -278,14 +294,18 @@ export const navigationRoadmap: NavigationGroup[] = [
             translationKey: "cpanel.navigation.languages",
             icon: "globe",
             kind: "page",
-            status: "disabled"
+            status: "enabled",
+            href: "/cpanel/languages",
+            permission: "languages.view"
           },
           {
             id: "interfaceTranslations",
             translationKey: "cpanel.navigation.interfaceTranslations",
             icon: "translate",
             kind: "page",
-            status: "disabled"
+            status: "enabled",
+            href: "/cpanel/interface-translations",
+            permission: "interface_translations.view"
           }
         ]
       },
@@ -294,7 +314,7 @@ export const navigationRoadmap: NavigationGroup[] = [
         translationKey: "cpanel.navigation.settings",
         icon: "settings",
         kind: "page",
-        status: "disabled"
+        status: "enabled", href: "/cpanel/settings", permission: "settings.view"
       },
       {
         id: "systemEvents",

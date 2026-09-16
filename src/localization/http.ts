@@ -11,7 +11,10 @@ export function readLanguageCookie(header?: string): string | undefined {
   catch { return undefined; }
 }
 
-export const localizationMiddleware: RequestHandler = (request, response, next) => {
+export const localizationMiddleware: RequestHandler = async (request, response, next) => {
+  // Retain translated error handling if a required reload fails; do not serve stale registry pages.
+  Object.assign(response.locals, localization.forLanguage(readLanguageCookie(request.headers.cookie)));
+  await localization.ensureFresh();
   Object.assign(response.locals, localization.forLanguage(readLanguageCookie(request.headers.cookie)));
   response.vary('Cookie');
   response.set('Content-Language', response.locals.language);
@@ -31,7 +34,7 @@ languageRouter.post('/', urlencoded({ extended: false, limit: '2kb' }), (request
   });
   // Explicit local destinations only; never trust arbitrary URLs or Referer.
   const returnTo: unknown = request.body?.returnTo;
-  const destination = returnTo === '/cpanel' || returnTo === '/cpanel/login' || returnTo === '/cpanel/profile' || returnTo === '/cpanel/media' || returnTo === '/cpanel/users' || (typeof returnTo === 'string' && /^\/cpanel\/permissions(?:\/[1-9]\d{0,18})?$/.test(returnTo)) ? returnTo : '/';
+  const destination = returnTo === '/cpanel/order-statuses' || returnTo === '/cpanel/settings' || returnTo === '/cpanel/payment-types' || returnTo === '/cpanel/delivery-types' || returnTo === '/cpanel/interface-translations' || returnTo === '/cpanel/languages' || returnTo === '/cpanel/currencies/frontend' || returnTo === '/cpanel/currencies/vendors' || returnTo === '/cpanel/discounts' || returnTo === '/cpanel' || returnTo === '/cpanel/login' || returnTo === '/cpanel/profile' || returnTo === '/cpanel/categories' || returnTo === '/cpanel/source-products' || returnTo === '/cpanel/products' || returnTo === '/cpanel/brands' || returnTo === '/cpanel/vendors' || returnTo === '/cpanel/media' || returnTo === '/cpanel/users' || (typeof returnTo === 'string' && /^\/cpanel\/permissions(?:\/[1-9]\d{0,18})?$/.test(returnTo)) ? returnTo : '/';
   response.set('Cache-Control', 'no-store');
   response.redirect(303, destination);
 });

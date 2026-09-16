@@ -7,6 +7,17 @@
 <% if(typeof usersPage !== 'undefined' && usersPage) { %><link rel="stylesheet" href="/public/cpanel/css/users.css"><% } %>
   <% if(typeof permissionsPage !== 'undefined' && permissionsPage) { %><link rel="stylesheet" href="/public/cpanel/css/users.css"><link rel="stylesheet" href="/public/cpanel/css/permissions.css"><% } %>
 <% if(typeof mediaPage !== 'undefined' && mediaPage) { %><link rel="stylesheet" href="/public/cpanel/css/media-browser.css"><% } %>
+<% if(typeof vendorsPage !== 'undefined' && vendorsPage) { %><link rel="stylesheet" href="/public/cpanel/css/vendors.css"><% } %>
+<% if((typeof productsPage !== 'undefined' && productsPage)||(typeof brandsPage !== 'undefined' && brandsPage)||(typeof categoriesPage !== 'undefined' && categoriesPage)) { %><link rel="stylesheet" href="/public/cpanel/css/brands.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/media-picker.css"><% } %>
+<% if(typeof categoriesPage !== 'undefined' && categoriesPage){ %><link rel="stylesheet" href="/public/cpanel/css/categories.css"><% } %>
+<% if(typeof discountsPage !== 'undefined' && discountsPage){ %><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/discounts.css"><% } %>
+<% if(typeof currenciesPage!=='undefined'&&currenciesPage){ %><link rel="stylesheet" href="/public/cpanel/css/currencies.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><% } %>
+<% if(typeof interfaceTranslationsPage!=='undefined'&&interfaceTranslationsPage){ %><link rel="stylesheet" href="/public/cpanel/css/interface-translations.css"><% } %>
+<% if(typeof languagesPage!=='undefined'&&languagesPage){ %><link rel="stylesheet" href="/public/cpanel/css/languages.css"><% } %>
+<% if(typeof optionTypesPage!=='undefined'&&optionTypesPage){ %><link rel="stylesheet" href="/public/cpanel/css/option-types.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/media-picker.css"><% } %>
+<% if(typeof productsPage!=='undefined'&&productsPage){ %><link rel="stylesheet" href="/public/cpanel/css/products.css"><% } %>
+<% if(typeof sourceProductsPage!=='undefined'&&sourceProductsPage){ %><link rel="stylesheet" href="/public/cpanel/css/source-products.css">
+<link rel="stylesheet" href="/public/cpanel/css/async-autocomplete.css"><% } %>
 </head>
 <body class="cpanel-application" data-development="<%= isDevelopment %>">
   <a class="shell-skip" href="#main-content"><%= t('cpanel.shell.skipContent') %></a>
@@ -36,5 +47,16 @@
   <% } %>
   <% if(typeof permissionsPage !== 'undefined' && permissionsPage) { %><script src="/public/cpanel/js/permissions.js"></script><% } %>
 <% if(typeof mediaPage !== 'undefined' && mediaPage) { %><script src="/public/cpanel/js/media-browser.js"></script><% } %>
+<% if(typeof vendorsPage !== 'undefined' && vendorsPage) { %><script src="/public/cpanel/js/password-visibility.js"></script><script src="/public/cpanel/js/vendors.js"></script><% } %>
+<% if(typeof brandsPage !== 'undefined' && brandsPage) { %><script type="module" src="/public/cpanel/js/brands.js"></script><% } %>
+<% if(typeof categoriesPage !== 'undefined' && categoriesPage){ %><script type="module" src="/public/cpanel/js/categories.js"></script><% } %>
+<% if(typeof discountsPage !== 'undefined' && discountsPage){ %><script type="module" src="/public/cpanel/js/discounts.js"></script><% } %>
+<% if(typeof currenciesPage!=='undefined'&&currenciesPage){ %><script type="module" src="/public/cpanel/js/currencies.js"></script><% } %>
+<% if(typeof languagesPage!=='undefined'&&languagesPage){ %><script type="module" src="/public/cpanel/js/languages.js"></script><% } %>
+<% if(typeof interfaceTranslationsPage!=='undefined'&&interfaceTranslationsPage){ %><script type="module" src="/public/cpanel/js/interface-translations.js"></script><% } %>
+<% if(typeof settingsPage!=='undefined'&&settingsPage){ %><script type="module" src="/public/cpanel/js/settings.js"></script><% } %>
+<% if(typeof optionTypesPage!=='undefined'&&optionTypesPage){ %><script type="module" src="/public/cpanel/js/option-types.js"></script><% } %>
+<% if(typeof productsPage!=='undefined'&&productsPage){ %><script type="module" src="/public/cpanel/js/products.js"></script><% } %>
+<% if(typeof sourceProductsPage!=='undefined'&&sourceProductsPage){ %><script type="module" src="/public/cpanel/js/source-products.js"></script><% } %>
 </body>
 </html>

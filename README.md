@@ -37,7 +37,7 @@ Open `http://127.0.0.1:3000/` or `http://127.0.0.1:3000/cpanel`.
 | `npm run build` | Clean dist, compile TypeScript, and copy views and browser assets |
 | `npm start` | Run the compiled application |
 | `npm test` | Run service/database tests and all browser/HTTP regression checks |
-| `npm run test:unit` | Run localization service/database/startup tests without browsers |
+| `npm run test:unit` | Run all unit/service/database tests without browsers |
 | `TEST_PRODUCTION=1 npm test` | Run the same checks against the existing compiled build |
 
 ## Environment
@@ -116,15 +116,29 @@ NODE_ENV=production npm start
 
 Tests need a running PostgreSQL development/test database configured through `.env` or environment variables, applied migrations, and a Chromium browser. Database integration tests create and drop a uniquely named test schema; the database role needs schema-creation permission. They do not change the application schema. Do not run development tests against a production database:
 
+Use [risk-based regression](docs/ARCHITECTURE.md#42-permanent-risk-based-testing-strategy): select the changed module and affected integrations from actual code changes. Preserve all tests; `npm test` remains the full checkpoint command, not a mandatory command after every isolated task. Own test/build failures block completion.
+
+Example targeted Vendor verification (run from the project root):
+
 ```sh
-npx playwright install chromium
-npm run db:migrate
-npm test
 npm run build
-TEST_PRODUCTION=1 npm test
+node --import tsx --test tests/unit/vendors.test.ts tests/unit/vendors-preview.test.ts tests/unit/permission-registry.test.ts tests/unit/permissions.test.ts tests/unit/auth.test.ts tests/unit/navigation.test.ts tests/unit/database.test.ts tests/unit/translation-integrity.test.ts tests/unit/localization.test.ts
+npm run localization:check
+TEST_PRODUCTION=1 CHROME_PATH=/usr/bin/google-chrome npx playwright test tests/vendors.spec.ts tests/vendors-navigation.spec.ts tests/auth.spec.ts tests/navigation.spec.ts --project=core
 ```
 
-Alternatively use an existing Chrome installation: `CHROME_PATH=/usr/bin/google-chrome npm test`. `TEST_PORT` overrides the test server's default port of 3100. Tests start and stop their own application server and require the test port to be free. They check all existing foundation behavior plus localization cache/fallback/reload, schema constraints, startup failures, all three languages, cookies and safe switching. The English foundation assertions explicitly select English. See [LOCALIZATION.md](docs/LOCALIZATION.md) for details.
+This covers Vendor CRUD/encryption, permission registry/service and management integration, authentication/CSRF, fresh migrations/translation integrity and navigation. It intentionally excludes unrelated deep Media/Profile/Users suites when their code/shared dependencies have not changed. This is an example, not a fixed universal test list: reassess scope for each change.
+
+Full checkpoints (explicit requests, releases/deployments, major module groups/refactoring, architecture-wide or critical authentication/security changes, and periodic checks after several modules):
+
+```sh
+npm run build
+TEST_PRODUCTION=1 CHROME_PATH=/usr/bin/google-chrome npm test
+```
+
+Install Chromium with `npx playwright install chromium` when needed; omit `CHROME_PATH` to use the installed Playwright browser. `TEST_PORT` overrides port 3100. Browser tests start/stop their own server; the test port must be free. Apply pending approved migrations before tests. All historical suites remain available; no test is removed or weakened by selecting a smaller run.
+
+Reports must list new tests run (or none), related regression run, build result, suites intentionally omitted and the risk-based reason. Never call a targeted run a full regression. For documentation-only work, check completeness/links unless runtime verification is requested. New localization text still requires complete database values and affected running-UI/cache verification; see [LOCALIZATION.md](docs/LOCALIZATION.md).
 
 ## Future module workflow
 
@@ -167,4 +181,63 @@ Permissions Management uses independent `permissions.view` and `permissions.upda
 
 ## Media File Manager
 
-`/cpanel/media` requires `media.view` (or Super User) and provides filesystem browsing/search and approved direct upload, folder creation, rename and permanent deletion. Direct uploads accept all types up to 10 MB per file; Profile/Users keep their separate cacheToken workflow. See [Media File Manager](docs/CPANEL_MEDIA.md). No Media database catalog exists. Rename requires GNU coreutils with `--no-copy --update=none-fail` (tested 9.7/Linux). See [activation report](MEDIA_FILE_MANAGER_ACTIVATION_REPORT.md) for navigation and verification status.
+`/cpanel/media` requires `media.view` (or Super User) and provides filesystem browsing/search and approved direct upload, folder creation, rename, move and permanent deletion. Direct uploads accept all types up to 10 MB per file; Profile/Users keep their separate cacheToken workflow. See [Media File Manager](docs/CPANEL_MEDIA.md). No Media database catalog exists. Rename requires GNU coreutils with `--no-copy --update=none-fail` (tested 9.7/Linux). See [activation report](MEDIA_FILE_MANAGER_ACTIVATION_REPORT.md) for navigation and verification status.
+
+## Vendors / CouchDB Suppliers
+
+`/cpanel/vendors` provides persistent configuration CRUD with independent view/create/update/status permissions. CouchDB passwords use AES-256-GCM. Before any application/migration/test command, configure `VENDOR_CREDENTIALS_KEY` as 64 hexadecimal characters (32 random bytes); keep it stable and securely backed up. See [Vendors](docs/CPANEL_VENDORS.md) for key handling, API, URL normalization and verification. The opt-in [durable Vendor synchronization](docs/DURABLE_VENDOR_SYNC.md) uses Nano, PostgreSQL checkpoints and transaction-derived stock snapshots. Set `VENDOR_SYNC_ENABLED=true` only in environments that should contact configured Vendors; it defaults to false. Source storage and durable progress are implemented; Source Products UI and the HORMAT Products domain remain outside this stage.
+
+### Vendor synchronization reset
+
+See [Reset Sync Data contract](docs/VENDOR_RESET_SYNC.md) for the selected-Vendor administrative action, permissions, preserved source data and restart/failure semantics. Targeted tests: `node --import tsx --test tests/unit/vendor-reset.test.ts` and `npx playwright test tests/vendor-reset.spec.ts --project=core`. Set `TEST_PRODUCTION=1` after `npm run build` to exercise the built runtime.
+
+## Brands module
+
+Authenticated `/cpanel/brands` is PostgreSQL-backed and enabled under Catalog for staff with `brands.view` (or Super User). Approved Create → Edit, inline Name translations, dedicated Main Image, ordered Gallery and independent saves are active. New Brands stay Hidden until explicitly published by staff with `brands.visibility`. The reusable filesystem Media Picker uses existing browse/upload services; no physical Media copy or deletion is performed by Brands.
+
+Brands also has canonical slug, independently translated SEO fields and real Product counts. Its Products tab is informational only; no attachment management is implemented. SEO has its own tab and independent Save SEO action. See architecture sections 53–54.
+
+See [Brands contract and exact schema](docs/CPANEL_BRANDS.md), [Media Picker](docs/MEDIA_PICKER.md), [activation report](BRANDS_ACTIVATION_REPORT.md), and [focused acceptance](docs/BRANDS_ACCEPTANCE.md).
+
+Focused verification:
+
+```sh
+npm run build
+node --import tsx --test tests/unit/brands.test.ts tests/unit/content-editor.test.ts tests/unit/permission-registry.test.ts tests/unit/navigation.test.ts
+TEST_PRODUCTION=1 CHROME_PATH=/usr/bin/google-chrome npx playwright test tests/brands.spec.ts --project=core
+CHROME_PATH=/usr/bin/google-chrome node --import tsx scripts/verify-brands-ui.ts
+```
+
+The live verification defaults to port 3000 (`LOCALIZATION_URL` overrides), checks database translations and durable authoring with a temporary staff account/Brands, then cleans up those records. It does not upload files to production Media. Broader checks remain risk-based; see architecture section 42.
+
+## Categories module
+
+`/cpanel/categories` provides the persistent recursive folder browser and shared content editor under `categories.view`. See [Categories contract](docs/CPANEL_CATEGORIES.md). Parent moves are cycle-checked, independent saves persist in PostgreSQL, and direct/recursive counts use nullable products.category_id. Product attachment management and Category deletion remain deferred.
+
+## Discounts module
+
+`/cpanel/discounts` uses persistent discounts, discount_translations and product_discounts under independent discounts.view/create/update/visibility permissions. Basic, Rules and inline Name translations save independently with the approved footer. Counts are real; Products remains informational. Percent rules accept 0–100, decimal values use NUMERIC, and the name-on-product flag is presentation-only. Pricing, winner selection, Attach/Detach and Delete remain deferred. See [Discounts contract](docs/CPANEL_DISCOUNTS.md).
+
+## Currency Configuration
+
+Marketplace → Currencies opens persistent `/cpanel/currencies/frontend` and `/cpanel/currencies/vendors`. Frontend currency/name overrides and manual Vendor rates use PostgreSQL; synchronized Vendor currencies remain the source registry. Missing rates display Not configured and use effective 1 only in the centralized NUMERIC conversion helper. No Product integration exists yet. See [Currency Configuration](docs/CPANEL_CURRENCIES.md). Focused live localization: `npm run localization:verify -- --scope=currencies`.
+
+## Languages registry management
+
+System → Localization → Languages opens authenticated `/cpanel/languages` under languages.view. Create/Edit/status/default persist to the existing registry with independent permissions and CSRF. New languages start inactive; code is immutable. An incomplete active language falls back to Default; assigning Default requires all current Default keys. Changes refresh the localization cache. No duplicate registry, Delete or translation editor. See [Languages contract](docs/CPANEL_LANGUAGES.md). Scoped live check: `npm run localization:verify -- --scope=languages`.
+
+## Interface Translation Management
+
+System → Localization → Interface Translations opens `/cpanel/interface-translations`. Search/filter existing keys, find missing active-language values and edit translations under independent view/update permissions. No Add/Delete keys. Central fallback is requested → current Default → deterministic any available → key. Clearing retains keys with NULL and refreshes runtime cache. See [contract](docs/INTERFACE_TRANSLATION_MANAGEMENT.md). Scoped live check: `npm run localization:verify -- --scope=interface-translations`.
+
+## Payment Types + Delivery Types
+
+Both modules are PostgreSQL-backed with permission-aware navigation, inline translations, Media Icon, optional visible Default and Delivery free/decimal price configuration. See [activation contract](docs/PAYMENT_DELIVERY_TYPES_ACTIVATION.md). Live localization: `npm run localization:verify -- --scope=option-types`.
+
+## Marketplace Settings
+
+System → Settings (`/cpanel/settings`) manages Language, Frontend Currency, Payment and Delivery defaults atomically under settings.view/settings.update. Only currency default is stored in the typed Settings registry; existing domain defaults remain authoritative. Current Default Currency cannot be hidden. See [contract](docs/MARKETPLACE_SETTINGS.md). Focused localization: `npm run localization:verify -- --scope=settings`.
+
+## Order Statuses
+
+Marketplace → Order Statuses (`/cpanel/order-statuses`) provides persistent configuration, inline Name/Description translations, a Media Icon and optional visible Default. It reuses Payment Types components under order_statuses.view/create/update/visibility. See [contract](docs/ORDER_STATUSES.md). No Orders workflow or Delete exists.

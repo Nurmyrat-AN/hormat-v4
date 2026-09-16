@@ -1,9 +1,11 @@
 import { Router, json, type ErrorRequestHandler } from 'express';
 import { requireCpanelAuth, requireCsrf, requirePermission } from '../../cpanel/auth/http.js';
-import { mediaMutation, mediaDeleteInfo } from '../../controllers/cpanel/media-mutations.js';
+import { mediaMutation, mediaDeleteInfo, mediaMoveFolders } from '../../controllers/cpanel/media-mutations.js';
 export const mediaApi = Router();
 mediaApi.use(requireCpanelAuth);
-mediaApi.get('/delete-info',requirePermission('media.delete'),mediaDeleteInfo);
+mediaApi.get('/move-folders',requirePermission('media.move'),mediaMoveFolders);
+mediaApi.post('/move',requirePermission('media.move'),requireCsrf,json({limit:'8kb'}),mediaMutation('move'));
+mediaApi.get('/delete-info',requirePermission('media.view'),requirePermission('media.delete'),mediaDeleteInfo);
 // CSRF and permission are checked before streaming multipart or parsing mutation JSON.
 mediaApi.post('/files',requirePermission('media.upload'),requireCsrf,mediaMutation('files'));
 mediaApi.post('/folders',requirePermission('media.create_folder'),requireCsrf,json({limit:'8kb'}),mediaMutation('folders'));

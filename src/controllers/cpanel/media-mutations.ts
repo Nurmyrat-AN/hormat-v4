@@ -3,9 +3,9 @@ import { MediaManager, ManagerError, managerError } from '../../cpanel/media/mut
 import { pool } from '../../database/pool.js';
 import { PermissionContext } from '../../cpanel/auth/permissions.js';
 const manager = new MediaManager();
-type Action = 'files' | 'folders' | 'rename' | 'delete';
-const permissions = {files:'media.upload',folders:'media.create_folder',rename:'media.rename',delete:'media.delete'};
-const failures = {files:'MEDIA_UPLOAD_FAILED',folders:'MEDIA_CREATE_FOLDER_FAILED',rename:'MEDIA_RENAME_FAILED',delete:'MEDIA_DELETE_FAILED'};
+type Action = 'files' | 'folders' | 'rename' | 'move' | 'delete';
+const permissions = {files:'media.upload',folders:'media.create_folder',rename:'media.rename',move:'media.move',delete:'media.delete'};
+const failures = {files:'MEDIA_UPLOAD_FAILED',folders:'MEDIA_CREATE_FOLDER_FAILED',rename:'MEDIA_RENAME_FAILED',move:'MEDIA_MOVE_FAILED',delete:'MEDIA_DELETE_FAILED'};
 export const mediaMutation = (action: Action): RequestHandler => async (request,response) => {
  const authorize = async () => {
   const user = response.locals.cpanelUser!, session = response.locals.cpanelSession!;
@@ -20,10 +20,10 @@ export const mediaMutation = (action: Action): RequestHandler => async (request,
    if(Object.keys(request.query).some(k=>k!=='path') || typeof request.query.path !== 'string') throw new ManagerError('MEDIA_INVALID_PATH');
    item = await manager.uploadToFolder(request,request.query.path,authorize);
   } else {
-   const allowed = action === 'folders' ? ['parent','name'] : action === 'rename' ? ['path','name'] : ['path','recursive'];
+   const allowed = action === 'folders' ? ['parent','name'] : action === 'rename' ? ['path','name'] : action === 'move' ? ['path','destination'] : ['path','recursive'];
    const body = request.body;
    if(Object.keys(request.query).length || !body || Array.isArray(body) || Object.keys(body).length !== allowed.length || Object.keys(body).some(k=>!allowed.includes(k)) || allowed.some(k=>typeof body[k] !== (k==='recursive'?'boolean':'string'))) throw new ManagerError('MEDIA_INVALID_PATH');
-   item = action === 'folders' ? await manager.createFolder(body.parent,body.name) : action === 'rename' ? await manager.renameItem(body.path,body.name) : await manager.deleteItem(body.path,body.recursive);
+   item = action === 'folders' ? await manager.createFolder(body.parent,body.name) : action === 'rename' ? await manager.renameItem(body.path,body.name) : action === 'move' ? await manager.moveItem(body.path,body.destination,authorize) : await manager.deleteItem(body.path,body.recursive);
   }
   response.status(action==='files'||action==='folders'?201:200).json({success:true,item});
  } catch(error) {
@@ -36,4 +36,11 @@ export const mediaDeleteInfo: RequestHandler = async(request,response) => {
   if(Object.keys(request.query).length!==1 || typeof request.query.path!=='string') throw new ManagerError('MEDIA_INVALID_PATH');
   response.json({success:true,item:await manager.deleteInfo(request.query.path)});
  } catch(error) {const failure=managerError(error,'MEDIA_DELETE_FAILED');response.status(failure.status).json({success:false,error:{code:failure.code}});}
+};
+
+export const mediaMoveFolders: RequestHandler = async(request,response) => {
+ try {
+  if(Object.keys(request.query).length!==1 || typeof request.query.path!=='string') throw new ManagerError('MEDIA_INVALID_PATH');
+  response.json({success:true,...await manager.destinationFolders(request.query.path)});
+ } catch(error) {const failure=managerError(error,'MEDIA_MOVE_FAILED');response.status(failure.status).json({success:false,error:{code:failure.code}});}
 };

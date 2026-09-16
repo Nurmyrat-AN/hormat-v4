@@ -222,4 +222,21 @@ Migration 017 introduces 54 `cpanel.media.*` UI and permission metadata keys wit
 
 Media continuation migration 018 adds seven real tm/ru/en keys (21 values): refresh, notFound, backToRoot, mime, dimensions, children and cacheWarning in cpanel.media. Current totals: 271 canonical keys / 813 values / 256 used UI keys. New manager filesystem fixture tests are isolated; live manager checks are read-only.
 
-Media activation: migration 019 adds 13 keys / 39 values. Totals: 284 canonical keys / 852 values / 268 used UI keys, all tm/ru/en.
+Media activation: migration 019 adds 13 keys / 39 values. Totals: 285 canonical keys / 855 values / 269 used UI keys, all tm/ru/en.
+Migration 020 adds one permanent-delete warning key / three values; the current totals above include it.
+
+Migration 021 clarifies the existing reference-risk message for rename and delete in all three languages; totals are unchanged.
+
+Media Move: migration 022 adds `cpanel.media.movePermission`, `move`, `moveTo`, `selectDestination`, `moveHere`, `moved`, `sameFolder`, `moveSelf`, `moveRisk`, `moveFailed`, `moveIncomplete`, each with real tm/ru/en values. Totals: 296 canonical keys / 888 translations / 280 used keys.
+
+Vendors UI uses the `cpanel.vendors.*` namespace, seeded by translation-only migration 023 (33 keys, 99 tm/ru/en values). Existing generic status/search/view/password/preview labels are reused. Current totals: 329 canonical keys, 987 values, 314 used UI keys.
+
+Vendors activation migration 025 adds 15 keys / 45 real tm/ru/en values. Current totals: 344 canonical keys / 1,032 values / 324 used UI keys. Live verification creates and removes a disposable real Vendor in each language; no CouchDB connection is made. Old mock-health/preview keys remain historical seed entries, not active workflow text.
+
+Migration 026 updates the existing Vendor subtitle in tm/ru/en to describe connection settings only, without implying that synchronization is available. Translation-key totals are unchanged.
+
+## Brands activation (current totals)
+
+Migration 035 adds ten keys / 30 real tm/ru/en values: `cpanel.brands.persistedCreated`, `persistedSaved`, `notFound`, `invalidRequest`, `invalidName`, `invalidLanguage`, `invalidMedia`, `duplicateMedia`, `galleryConflict`, and `cpanel.media.pickerPermanentOnly`. Existing navigation/content/permission/error labels are reused. Through migration 035 there are **432 canonical keys / 1,296 required-language values / 405 currently used UI keys**. These totals supersede historical stage counts above. Brand content overrides in `brand_translations` are separate from interface localization.
+
+Brands SEO extension: migration 037 adds nine keys / 27 real tm/ru/en values; totals through migration 037 are 441 canonical keys, 1,323 values and 414 used UI keys. Existing Products navigation label is reused in the label/count presentation. Focused live verification is in tests/brand-seo.spec.ts.

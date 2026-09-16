@@ -1,3 +1,4 @@
+import {vendorSyncManager} from './vendors/sync/index.js';
 import { mediaStore } from './media/index.js';
 import { createServer } from 'node:http';
 import { app } from './app/index.js';
@@ -18,6 +19,7 @@ async function shutdown(exitCode: number): Promise<void> {
   const timeout = setTimeout(() => process.exit(1), 10000);
   timeout.unref();
   try {
+    await vendorSyncManager.stop();
     await new Promise<void>((resolve, reject) => {
       io.close((error?: NodeJS.ErrnoException) => error && error.code !== 'ERR_SERVER_NOT_RUNNING' ? reject(error) : resolve());
       server.closeIdleConnections();
@@ -53,6 +55,7 @@ try {
   mediaCleanup = setInterval(() => { void mediaStore.cleanup().catch(() => console.error('Temporary media cleanup failed.')); }, 3600000);
   mediaCleanup.unref();
   if (!stopping) {
+    void vendorSyncManager.start();
     server.listen(config.app.port, config.app.host, () => {
       console.info(`HORMAT-code-v4 (${config.app.mode}) listening on http://${config.app.host}:${config.app.port}`);
       console.info('Localization ready; database connectivity is available at GET /health.');

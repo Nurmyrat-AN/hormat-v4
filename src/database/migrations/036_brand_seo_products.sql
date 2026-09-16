@@ -1,0 +1,12 @@
+ALTER TABLE brands ADD COLUMN slug text;
+UPDATE brands SET slug='brand-'||id;
+ALTER TABLE brands ALTER COLUMN slug SET NOT NULL;
+ALTER TABLE brands ADD CONSTRAINT brands_slug_format CHECK (char_length(slug)<=120 AND slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$');
+ALTER TABLE brands ADD CONSTRAINT brands_slug_unique UNIQUE(slug);
+ALTER TABLE brands ADD COLUMN seo_title text NOT NULL DEFAULT '' CHECK(char_length(seo_title)<=200);
+ALTER TABLE brands ADD COLUMN seo_description text NOT NULL DEFAULT '' CHECK(char_length(seo_description)<=2000);
+ALTER TABLE brand_translations ALTER COLUMN name DROP NOT NULL;
+ALTER TABLE brand_translations ADD COLUMN seo_title text CHECK(seo_title IS NULL OR (seo_title=btrim(seo_title) AND char_length(seo_title) BETWEEN 1 AND 200));
+ALTER TABLE brand_translations ADD COLUMN seo_description text CHECK(seo_description IS NULL OR (seo_description=btrim(seo_description) AND char_length(seo_description) BETWEEN 1 AND 2000));
+ALTER TABLE products ADD COLUMN brand_id bigint REFERENCES brands(id) ON DELETE RESTRICT;
+CREATE INDEX products_brand_id ON products(brand_id);

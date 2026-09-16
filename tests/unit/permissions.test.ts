@@ -23,8 +23,8 @@ async function actor(superuser:boolean){const user=await bootstrapSuperuser({nam
 before(async()=>{await pool.query(`CREATE SCHEMA ${schema}`);await migrate(db);root=await actor(true);normal=await actor(false);target=await actor(false);});
 after(async()=>{await db.end();await pool.query(`DROP SCHEMA ${schema} CASCADE`);await pool.end();});
 
-test('registry has twelve assignable booleans and non-assignable Super User; root needs no explicit grants',async()=>{
- assert.equal(booleanPermissionKeys.length,12);assert.equal(new Set(booleanPermissionKeys).size,12);
+test('registry has twenty-two assignable booleans and non-assignable Super User; root needs no explicit grants',async()=>{
+ assert.equal(booleanPermissionKeys.length,22);assert.equal(new Set(booleanPermissionKeys).size,22);
  assert.equal(permissionDefinitions.flatMap(group=>group.permissions).find(item=>item.key==='superuser')?.assignable,false);
  await service.save(root,target.id,body(booleanPermissionKeys));
  assert.deepEqual((await db.query('SELECT key,value FROM cpanel_user_permissions WHERE user_id=$1',[root.id])).rows,[{key:'superuser',value:true}]);

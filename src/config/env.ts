@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import {syncOptions} from '../vendors/sync/config.js';
+import {validateVendorKey} from '../vendors/credentials.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,6 +34,8 @@ function nonnegative(name: string, fallback: number): number {
 const mediaTtlHours = nonnegative('MEDIA_CACHE_TTL_HOURS', 24);
 if (!mediaTtlHours) throw new Error('Configuration error: MEDIA_CACHE_TTL_HOURS must be positive.');
 export const config = {
+  vendorSync: syncOptions(process.env),
+  vendors: {credentialsKey:validateVendorKey(process.env.VENDOR_CREDENTIALS_KEY)},
   media: { root: path.resolve(process.env.MEDIA_ROOT?.trim() || fileURLToPath(new URL('../../.media', import.meta.url))), ttlHours: mediaTtlHours, maxBytes: nonnegative('MEDIA_MAX_UPLOAD_BYTES', 0) },
   app: { mode, host: process.env.HOST?.trim() || '127.0.0.1', port: port('PORT', '3000') },
   database: {

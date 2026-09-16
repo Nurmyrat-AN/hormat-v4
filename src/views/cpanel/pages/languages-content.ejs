@@ -1,0 +1,38 @@
+<section id="languages-page" data-csrf="<%= cpanelSession.csrf_token %>" data-view="grid" data-capabilities="<%= JSON.stringify(capabilities) %>">
+ <script type="application/json" id="languages-data"><%- JSON.stringify(rows).replace(/</g,'\\u003c') %></script>
+ <div class="languages-toolbar">
+  <input id="languages-search" type="search" class="form-control" placeholder="<%= t('cpanel.languages.search') %>" aria-label="<%= t('cpanel.languages.search') %>">
+  <select id="languages-filter" class="form-select" aria-label="<%= t('cpanel.users.status') %>"><option value="all"><%= t('cpanel.users.allStatuses') %></option><option value="active"><%= t('cpanel.users.active') %></option><option value="inactive"><%= t('cpanel.users.inactive') %></option></select>
+  <% if(capabilities.create){ %><button id="languages-add" type="button" class="btn btn-success"><%= t('cpanel.languages.add') %></button><% } %>
+  <div class="btn-group" role="group" aria-label="<%= t('cpanel.users.view') %>"><% for(const view of [{id:'grid',label:t('cpanel.users.grid')},{id:'list',label:t('cpanel.users.list')}]){ %><button type="button" class="btn btn-outline-secondary" data-view="<%= view.id %>" aria-label="<%= view.label %>"><%- include('../partials/shell/icon',{name:view.id}) %></button><% } %></div>
+ </div>
+ <div class="languages-list-head" hidden aria-hidden="true"><span><%= t('cpanel.languages.name') %></span><span><%= t('cpanel.languages.code') %></span><span><%= t('cpanel.languages.default') %></span><span><%= t('cpanel.users.status') %></span><span><%= t('cpanel.currencies.sort') %></span><span><%= t('cpanel.users.actions') %></span></div>
+ <div id="languages-items" class="languages-items"></div><p id="languages-empty" hidden><%= t('cpanel.languages.empty') %></p><p id="languages-feedback" role="status" class="small mt-3"></p>
+ <template id="language-card"><article class="language-card">
+  <h2 class="fs-5 mb-0" data-name></h2><p class="text-body-secondary mb-0" data-code></p>
+  <span data-default class="badge"></span><span data-status class="badge"></span><span data-sort class="small text-body-secondary"></span>
+  <p data-count class="small text-body-secondary mb-0"></p>
+  <div class="dropdown language-actions"><button type="button" class="shell-icon-button" data-bs-toggle="dropdown" aria-label="<%= t('cpanel.users.actions') %>"><%- include('../partials/shell/icon',{name:'more'}) %></button><ul class="dropdown-menu dropdown-menu-end">
+   <li><button type="button" class="dropdown-item" data-action="edit"><%= t('cpanel.languages.edit') %></button></li>
+   <% if(capabilities.status){ %><li><button type="button" class="dropdown-item" data-action="status"></button></li><% } %>
+   <% if(capabilities.default){ %><li><button type="button" class="dropdown-item" data-action="default"><%= t('cpanel.languages.setDefault') %></button></li><% } %>
+  </ul></div>
+ </article></template>
+ <div id="language-dialog" class="modal fade" tabindex="-1" aria-labelledby="language-title"><div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+ <div class="modal-header"><h2 id="language-title" class="modal-title fs-5"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t('cpanel.users.close') %>"></button></div>
+ <div class="modal-body"><form id="language-form" novalidate>
+  <label class="form-label" for="language-code"><%= t('cpanel.languages.code') %></label><input id="language-code" class="form-control" maxlength="35" autocomplete="off" spellcheck="false" aria-describedby="language-code-help"><p id="language-code-help" class="small text-body-secondary mt-2"><%= t('cpanel.languages.codeHelp') %></p>
+  <label class="form-label" for="language-name"><%= t('cpanel.languages.name') %></label><input id="language-name" class="form-control mb-3" maxlength="200" autocomplete="off">
+  <label class="form-label" for="language-sort"><%= t('cpanel.currencies.sort') %></label><input id="language-sort" type="number" step="1" class="form-control mb-3">
+  <div id="language-state-controls" hidden>
+   <div class="form-check form-switch mb-3"><input id="language-active" type="checkbox" class="form-check-input" role="switch" aria-describedby="language-default-help"><label class="form-check-label" for="language-active"><%= t('cpanel.users.active') %></label></div>
+   <div class="form-check form-switch"><input id="language-default" type="checkbox" class="form-check-input" role="switch" aria-describedby="language-default-help"><label class="form-check-label" for="language-default"><%= t('cpanel.languages.default') %></label></div>
+   <p id="language-default-help" class="small text-body-secondary mt-2"><%= t('cpanel.languages.defaultHelp') %></p>
+  </div>
+ </form><p id="language-status" role="status" class="small mt-3"></p>
+ <div id="language-discard" class="alert alert-warning" hidden><p><%= t('cpanel.content.discardPrompt') %></p><button id="language-keep" type="button" class="btn btn-outline-secondary"><%= t('cpanel.users.cancel') %></button> <button id="language-discard-confirm" type="button" class="btn btn-danger"><%= t('cpanel.content.discard') %></button></div>
+ </div>
+ <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><%= t('cpanel.users.close') %></button><button id="language-save" type="submit" form="language-form" class="btn btn-success"><%= t('cpanel.profile.actions.save') %></button></div>
+ </div></div></div>
+ <div hidden><% const labels={create:t('cpanel.languages.create'),edit:t('cpanel.languages.edit'),save:t('cpanel.profile.actions.save'),saved:t('cpanel.languages.saved'),saving:t('cpanel.content.saving'),failed:t('cpanel.languages.failed'),incomplete:t('cpanel.languages.incomplete'),refreshPending:t('cpanel.languages.refreshPending'),denied:t('cpanel.auth.forbidden'),dirty:t('cpanel.content.unsaved'),readOnly:t('cpanel.content.readOnly'),invalid:t('cpanel.languages.invalid'),duplicate:t('cpanel.languages.duplicate'),default:t('cpanel.languages.default'),notDefault:t('cpanel.languages.notDefault'),defaultHelp:t('cpanel.languages.defaultHelp'),active:t('cpanel.users.active'),inactive:t('cpanel.users.inactive'),activate:t('cpanel.users.activate'),deactivate:t('cpanel.users.deactivate'),sort:t('cpanel.currencies.sort'),count:t('cpanel.languages.count')};for(const [key,value]of Object.entries(labels)){ %><span data-label="<%= key %>"><%= value %></span><% } %></div>
+</section>

@@ -34,3 +34,16 @@ test('recursive deletion is explicit, includes hidden children, leaves siblings/
   await assert.rejects(manager.renameItem('sibling/safe','../record.json'));
  }finally{await rm(outside,{recursive:true,force:true});}
 }));
+test('cache records stay private after container rename; normal filesystem writes cannot manufacture owner metadata',()=>fixture(async(manager,root)=>{
+ const store=new MediaStore(root,24);const stage=await store.staging();await writeFile(stage.file,'owned');const ref=await store.publish(stage,'owner','x',{extension:'bin',mimeType:'application/octet-stream',size:5,width:null,height:null});
+ await writeFile(path.join(root,'cache/manual.bin'),'manual');
+ await assert.rejects(manager.renameItem('cache/manual.bin',ref.cacheToken+'.bin'),{code:'MEDIA_ALREADY_EXISTS'});
+ assert.equal(await readFile((await store.preview(ref.cacheToken,'bin')).file,'utf8'),'owned');
+ await manager.renameItem('cache','archived');
+ assert.equal((await manager.list('archived/'+ref.cacheToken,'','current','name')).items.some(i=>i.name==='record.json'),false);
+ await assert.rejects(manager.resolve('archived/'+ref.cacheToken+'/record.json'));
+ await manager.createFolder('','candidate');await manager.createFolder('candidate',ref.cacheToken);
+ await writeFile(path.join(root,'candidate',ref.cacheToken,'payload'),'{}');
+ await assert.rejects(manager.renameItem('candidate/'+ref.cacheToken+'/payload','record.json'));
+ await manager.renameItem('candidate','cache');await assert.rejects(store.finalizeCachedMedia({cacheToken:ref.cacheToken,destination:'users/avatars',ownerId:'owner'}),{code:'MEDIA_CACHE_NOT_FOUND'});
+}));

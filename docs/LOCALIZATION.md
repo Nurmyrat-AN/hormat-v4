@@ -1,6 +1,6 @@
 # Interface localization
 
-Shared infrastructure for Frontend (`/`) and CPanel (`/cpanel`). It translates application/interface text only. It does not implement marketplace entity/content translations, language-management pages, or automatic translation.
+Shared infrastructure for Frontend (`/`) and CPanel (`/cpanel`). It translates application/interface text only. It remains separate from marketplace entity/content translations and automatic translation. See [Languages](CPANEL_LANGUAGES.md) and [Interface Translation Management](INTERFACE_TRANSLATION_MANAGEMENT.md) for the activated CPanel maintenance screens.
 
 ## Database and migrations
 
@@ -14,7 +14,7 @@ The existing migration directory now contains `src/database/migrations/001_inter
 | --- | --- | --- |
 | `code` | `text` | Primary key; lowercase alphanumeric language code with optional hyphenated subtags |
 | `display_name` | `text` | Required, nonblank |
-| `is_active` | `boolean` | Required, defaults to true |
+| `is_active` | `boolean` | Required, defaults to false |
 | `is_default` | `boolean` | Required, defaults to false |
 | `sort_order` | `integer` | Required, defaults to 0; tie-break by code |
 | `created_at` | `timestamptz` | Required, defaults to `now()` |
@@ -29,7 +29,7 @@ Switch the default in one transaction: clear the old `is_default`, then set the 
 | --- | --- | --- |
 | `language_code` | `text` | Required; foreign key to `languages.code` |
 | `translation_key` | `text` | Required; semantic dotted key, independent of translated value |
-| `translation_value` | `text` | Required, nonblank |
+| `translation_value` | `text` | Nullable; nonblank when present. Cleared values retain the key with NULL. |
 
 Composite primary key `(language_code, translation_key)` guarantees at most one value per language/key and supplies the required index with `language_code` leading. The foreign key cascades language-code updates/deletions. No redundant indexes or speculative fields were added.
 
@@ -60,8 +60,8 @@ The initial seed is part of migration 001 so schema and required initial data co
 
 ## Cache and startup
 
-- `src/localization/repository.ts` reads active languages and their translations within one read-only repeatable-read transaction.
-- `service.ts` builds maps in memory and validates one active default and a nonempty default dictionary. `load()` and `reload()` publish the complete snapshot only after successful loading; failure preserves an existing good cache. Concurrent reload calls share one load. Requests already rendering retain their original snapshot.
+- `src/localization/repository.ts` reads all languages and their translations (only active languages enter selectors) within one read-only repeatable-read transaction.
+- `service.ts` builds maps in memory and validates one active default; dictionaries may be empty for the approved key fallback. `load()` and `reload()` publish the complete snapshot only after successful loading; failure preserves an existing good cache. Concurrent reload calls share one load. Requests already rendering retain their original snapshot.
 - `index.ts` provides the shared application instance. Server-side code can call `localization.translate(language, key)` or bind `localization.forLanguage(language)`.
 - `server.ts` awaits the first load before opening the HTTP listener. Invalid credentials, missing localization tables, or critically invalid initial data produce a clear startup error and nonzero exit. Apply migrations first.
 - **Normal translation lookup performs no PostgreSQL query per `t()` call.** It reads memory only. Database work happens at load/reload and independent technical health checks.
@@ -116,7 +116,7 @@ The small scanner inventories literal `t('semantic.key')` calls in EJS, app/cont
 
 After applying data migrations, refresh every running process. Restart normally, or, for a development-mode Node process, send `SIGUSR2` to its verified application PID (`kill -USR2 <app-pid>`). The development-only handler invokes the existing atomic `localization.reload()` and logs success/failure. Do not signal the npm/tsx supervisor or a production process. Production processes should be restarted after migrations. There is no HTTP refresh endpoint, automatic polling, or per-lookup SQL.
 
-Then run `CHROME_PATH=/usr/bin/google-chrome npm run localization:verify`. It uses the actual server at `http://127.0.0.1:3000` (override with `LOCALIZATION_URL`) instead of starting a fresh one. It checks `/`, `/cpanel`, `/cpanel/login` in tm/ru/en, visible/hidden UI messages and translated attributes against actual database values, and language-selector cookies/rendering. This catches stale running caches that fresh-server regression tests cannot detect.
+Then verify real translated values and language switching on the affected running pages. For cross-module localization changes, run the comprehensive `CHROME_PATH=/usr/bin/google-chrome npm run localization:verify`; isolated UI work may use targeted live browser checks covering its affected text/cache. The comprehensive verifier uses the actual server at `http://127.0.0.1:3000` (override with `LOCALIZATION_URL`) instead of starting a fresh one. It checks `/`, `/cpanel`, `/cpanel/login` in tm/ru/en, visible/hidden UI messages and translated attributes against actual database values, and language-selector cookies/rendering. This catches stale running caches that fresh-server regression tests cannot detect.
 
 The current incident was a stale process cache, not absent canonical translations. All 102 rows already existed in the development database and migrations 001/002. Reapplying migration commands was a no-op; restarting the existing watcher-managed process made its login page render the existing values. Do not rewrite applied seed migrations or insert duplicate copies to treat a cache problem.
 
@@ -140,4 +140,26 @@ Media File Manager UI migration 017 adds 54 keys / 162 real tm/ru/en values. Cur
 
 Media continuation migration 018 adds seven real tm/ru/en keys (21 values): refresh, notFound, backToRoot, mime, dimensions, children and cacheWarning in cpanel.media. Current totals: 271 canonical keys / 813 values / 256 used UI keys. New manager filesystem fixture tests are isolated; live manager checks are read-only.
 
-Media activation migration 019 adds 13 keys / 39 tm/ru/en values. Current source/database totals: 284 keys / 852 translations; 268 used UI keys. Direct upload success has its own key, distinct from temporary upload success.
+Media activation migration 019 adds 13 keys / 39 tm/ru/en values. Current source/database totals: 285 keys / 855 translations; 269 used UI keys. Direct upload success has its own key, distinct from temporary upload success.
+Migration 020 adds the explicit permanent-delete warning (one key / three values); the totals above include both activation migrations.
+
+Migration 021 updates existing reference-risk values for rename/delete without new keys. The final development server passed tm/ru/en live verification with Media enabled.
+
+Media Move migration 022 adds 11 keys and 33 real tm/ru/en values. Canonical totals are now 296 keys / 888 values; the source inventory uses 280 UI keys. Existing collision/cancel/loading translations are reused.
+
+Vendors UI migration 023 adds 33 semantic keys / 99 real tm/ru/en translations. Totals: 329 canonical keys / 987 values / 314 used UI keys; the pre-existing profile preview notice is reused. Live verification now includes `/cpanel/vendors` and safe fixture data.
+
+Vendors activation migration 025 adds 15 keys / 45 real tm/ru/en values. Current totals: 344 canonical keys / 1,032 values / 324 used UI keys. Live verification creates and removes a disposable real Vendor in each language; no CouchDB connection is made. Old mock-health/preview keys remain historical seed entries, not active workflow text.
+
+Migration 026 updates the existing Vendor subtitle in tm/ru/en to describe connection settings only, without implying that synchronization is available. Translation-key totals are unchanged.
+
+
+Under architecture section 42, fresh-migration/localization integrity can be run directly with `node --import tsx --test tests/unit/database.test.ts tests/unit/translation-integrity.test.ts tests/unit/localization.test.ts` plus `npm run localization:check`; it does not require the complete historical suite. For new/changed UI text, continue verifying real values on the affected running page/cache. `localization:verify` is the existing comprehensive live verifier; running it is not a claim that the full HORMAT regression suite ran.
+
+Brands activation migration 035 adds ten keys / 30 real tm/ru/en values. Through migration 035: **432 canonical keys, 1,296 required-language values, 405 used UI keys**. Live global verification includes the Brands host when checking shared Media Picker labels, because those labels are not rendered by standalone File Manager. `scripts/verify-brands-ui.ts` additionally checks real Brands creation/translation persistence/reload in all three languages and cleans up its temporary records. See [activation report](../BRANDS_ACTIVATION_REPORT.md).
+
+Brands SEO extension: migration 037 adds nine keys / 27 real tm/ru/en values; totals through migration 037 are 441 canonical keys, 1,323 values and 414 used UI keys. Existing Products navigation label is reused in the label/count presentation. Focused live verification is in tests/brand-seo.spec.ts.
+
+Categories activation: migrations 039–041 leave 470 canonical keys / 1410 required tm/ru/en values and 441 currently used UI keys. Category preview labels remain historical seed entries; live Categories uses persistence messages. Current DB migrations, cache reload and targeted live Categories browser verification passed.
+
+Current fallback supersedes historical descriptions: requested nonblank → dynamic Default nonblank → deterministic any available (active sort_order/code, then inactive sort_order/code) → key. Migration 054 permits NULL values without deleting keys. Runtime admin edits refresh the existing cache after commit. Migration 055 adds 16 keys/48 values; canonical totals are 591 keys/1,773 required-language values/55 migrations; 558 UI keys. See architecture section 64.

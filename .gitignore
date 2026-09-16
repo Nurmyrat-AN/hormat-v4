@@ -12,3 +12,5 @@ artifacts/
 
 .media/
 .test-media/
+# Bounded real-source analysis artifacts may contain source IDs; review before sharing.
+docs/COUCHDB_DOCUMENT_INVENTORY.json

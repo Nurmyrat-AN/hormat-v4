@@ -1,0 +1,14 @@
+import {Router,json,type ErrorRequestHandler} from 'express';
+import {requireCpanelAuth,requirePermission,requireCsrf} from '../../cpanel/auth/http.js';
+import {listLanguages,detailLanguage,mutateLanguage} from '../../controllers/cpanel/languages-api.js';
+export const languagesApi=Router();
+languagesApi.use(requireCpanelAuth);
+languagesApi.get('/',requirePermission('languages.view'),listLanguages);
+languagesApi.get('/:code',requirePermission('languages.view'),detailLanguage);
+languagesApi.use(requireCsrf,json({limit:'16kb'}));
+languagesApi.post('/',requirePermission('languages.create'),mutateLanguage('create'));
+languagesApi.patch('/:code',mutateLanguage('edit'));
+languagesApi.post('/:code/status',requirePermission('languages.status'),mutateLanguage('status'));
+languagesApi.post('/:code/default',requirePermission('languages.default'),mutateLanguage('default'));
+const invalid:ErrorRequestHandler=(error,_request,response,next)=>{if(error?.type==='entity.parse.failed'||error?.type==='entity.too.large'){response.status(400).json({success:false,code:'LANGUAGE_INVALID_REQUEST'});return;}next(error);};
+languagesApi.use(invalid);

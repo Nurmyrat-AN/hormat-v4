@@ -1,0 +1,35 @@
+<div class="translatable-field" data-translatable-field="<%= fieldId %>" <%= typeof htmlDescription!=='undefined'&&htmlDescription?'data-html-description':'' %>>
+ <label for="<%= fieldId %>" class="form-label" data-field-label><%= fieldLabel %></label>
+ <div class="input-group">
+  <% if(typeof multiline!=='undefined'&&multiline){ %><textarea id="<%= fieldId %>" class="form-control" rows="3" data-field-base aria-describedby="<%= fieldId %>-help <%= fieldId %>-error"></textarea><% }else{ %>
+  <input id="<%= fieldId %>" class="form-control" data-field-base aria-describedby="<%= fieldId %>-help <%= fieldId %>-error" autocomplete="off"><% } %>
+  <button type="button" class="btn btn-outline-secondary translation-toggle" data-translation-toggle aria-controls="<%= fieldId %>-translations" aria-expanded="false" disabled>
+   <%- include('../shell/icon',{name:'globe'}) %><span data-translation-count></span><span data-translation-dirty hidden aria-hidden="true">•</span>
+  </button>
+ </div>
+ <p id="<%= fieldId %>-error" class="text-danger small mt-1" hidden></p>
+ <p id="<%= fieldId %>-help" class="small text-body-secondary mt-2"><%= t('cpanel.content.baseHelp') %></p>
+ <section id="<%= fieldId %>-translations" class="field-translations mb-3" aria-label="<%= fieldLabel %> — <%= t('cpanel.content.translations') %>" hidden>
+  <p class="small text-body-secondary"><%= typeof overrideHelp==='string'?overrideHelp:t('cpanel.content.overrideHelp') %></p>
+  <% for(const item of languages){ %>
+   <div class="translation-row mb-3" data-translation-row="<%= item.code %>">
+    <label for="<%= fieldId %>-translation-<%= item.code %>" class="form-label"><%= item.code.toUpperCase() %> — <%= item.display_name %> <span data-translation-mark aria-hidden="true"></span></label>
+    <% if(typeof multiline!=='undefined'&&multiline){ %><textarea id="<%= fieldId %>-translation-<%= item.code %>" class="form-control" rows="3" data-translation-input="<%= item.code %>" aria-describedby="<%= fieldId %>-fallback-<%= item.code %>"></textarea><% }else{ %>
+    <input id="<%= fieldId %>-translation-<%= item.code %>" class="form-control" data-translation-input="<%= item.code %>" aria-describedby="<%= fieldId %>-fallback-<%= item.code %>" autocomplete="off"><% } %>
+    <p id="<%= fieldId %>-fallback-<%= item.code %>" class="small text-body-secondary mt-1 mb-0" data-translation-fallback></p>
+   </div>
+  <% } %>
+  <div class="translation-footer"><p data-translation-status role="status" class="small mb-0"></p><button type="button" class="btn btn-success" data-save-field><%= t('cpanel.content.saveTranslations') %></button></div>
+ </section>
+ <% if(typeof htmlDescription!=='undefined'&&htmlDescription){ %><div hidden data-html-labels>
+ <% const htmlLabels={visual:t('cpanel.html.visual'),html:t('cpanel.html.source'),previewFailed:t('cpanel.html.previewFailed'),toolbar:t('cpanel.html.toolbar'),bold:t('cpanel.html.bold'),italic:t('cpanel.html.italic'),underline:t('cpanel.html.underline'),insertUnorderedList:t('cpanel.html.bullets'),insertOrderedList:t('cpanel.html.numbers'),createLink:t('cpanel.html.link'),removeFormat:t('cpanel.html.clear'),url:t('cpanel.html.url')};for(const [key,value]of Object.entries(htmlLabels)){ %><span data-html-label="<%= key %>"><%= value %></span><% } %>
+ </div><% } %>
+ <div hidden data-field-labels>
+  <span data-field-text="show"><%= t('cpanel.content.showTranslations') %></span><span data-field-text="hide"><%= t('cpanel.content.hideTranslations') %></span>
+  <span data-field-text="dirty"><%= t('cpanel.content.unsavedTranslations') %></span><span data-field-text="preview"><%= t('cpanel.content.fallbackPreview') %></span>
+  <span data-field-text="missing"><%= t('cpanel.content.missingTranslation') %></span><span data-field-text="fallback"><%= t('cpanel.content.usesDefault') %></span>
+  <span data-field-text="explicit"><%= t('cpanel.content.override') %></span><span data-field-text="locked"><%= lockedLabel %></span>
+  <span data-field-text="saved"><%= typeof savedLabel==='string'?savedLabel:t('cpanel.content.saved') %></span><span data-field-text="saving"><%= t('cpanel.content.saving') %></span>
+  <span data-field-text="error"><%= t('cpanel.content.saveFailed') %></span><span data-field-text="save"><%= t('cpanel.content.saveTranslations') %></span>
+ </div>
+</div>

@@ -1,10 +1,10 @@
-**Current update:** Users is enabled at `/cpanel/users` for the explicitly authorized UI-review stage. Permissions remains disabled. See [Users UI](CPANEL_USERS.md). Earlier roadmap counts below describe the initial stage.
+**Current activation:** Foundation, Categories, Brands, Media, Vendors, Users and Permissions are enabled. Domain entries require their own effective view permission; Foundation requires authentication. The other 24 roadmap pages remain disabled. See [Brands activation](CPANEL_BRANDS.md).
 
 # CPanel navigation roadmap
 
 The owner explicitly approved the permanent initial roadmap after approving the shell. This replaces the shell's temporary example menu and its earlier restriction against listing unimplemented modules.
 
-## Current hierarchy
+## Initial hierarchy (historical)
 
 Panel foundation (`/cpanel`) is **enabled** under Overview, separate from Dashboard. All 30 planned page entries below are **disabled**. Shopping, Access and Localization are structural submenu controls, not implemented business pages; they expand to show their disabled children.
 
@@ -34,7 +34,7 @@ The larger navigation region scrolls independently; brand/pin rows do not shrink
 
 ## Enabling and evolving the roadmap
 
-For every future page: requirements → UI-first implementation → review → required backend/schema only when approved → tests → regression → readiness decision → change navigation status to enabled. Starting development is not sufficient to enable a menu entry. Add the legitimate route/href and review permissions separately when enabling it.
+For every future page: requirements → UI-first implementation → review → required backend/schema only when approved → module tests and risk-based related regression (architecture section 42) → readiness decision → change navigation status to enabled. Starting development is not sufficient to enable a menu entry. Add the legitimate route/href and review permissions separately when enabling it.
 
 Explicit development decisions may add/remove/rename/move/merge/split entries or change nesting. The roadmap is a visible development plan, not an irreversible domain or database design. A Delivery Types entry does not authorize a delivery_types table; design/approve schema when that module is reached.
 
@@ -79,3 +79,11 @@ Users was enabled during its approved UI stage. The activated module now additio
 ## Permissions activation
 
 Following the complete activation regression, `System → Access → Permissions` is enabled with `/cpanel/permissions` and the independent `permissions.view` visibility requirement. Exact Super User authority satisfies it without individual permission rows. Detail pages retain the parent Permissions active state. An Access submenu with no permitted children is omitted; other grouped/collapsed/pinned/mobile behavior remains shared. Navigation availability is never stored as an assignment.
+
+Media activation: Catalog → Media is now enabled at `/cpanel/media` after the activation regression passed. The link requires effective `media.view` (or exact Super User), independently from the roadmap status. No other planned module was enabled.
+
+## Vendors activation
+
+After all 151 activation regression tests passed, Vendors → Vendors was enabled at `/cpanel/vendors`. The entry requires effective `vendors.view` (or exact Super User), independently of roadmap availability. Same-session permission revocation removes the link on the next request. Source Products remains disabled. Shared collapse/pin/mobile behavior is unchanged.
+
+Categories activation: Catalog → Categories is enabled at `/cpanel/categories` with independent `categories.view` authorization after targeted activation verification. Recursive content persistence is described in [Categories](CPANEL_CATEGORIES.md). Source Products stays disabled.

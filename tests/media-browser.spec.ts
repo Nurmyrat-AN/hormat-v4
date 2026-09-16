@@ -12,7 +12,7 @@ for(const language of ['tm','ru','en'])test(`Media manager ${language}: real bro
   await writeFile(path.join(root,imageName),Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8x8AAAAASUVORK5CYII=','base64'));
   id=(await bootstrapSuperuser({name:'Media reviewer',email:`${randomUUID()}@example.invalid`,password:randomUUID()})).id;
   const session=await sessions.create(id);await context.addCookies([{name:process.env.TEST_PRODUCTION==='1'?'__Secure-hormat_cpanel':'hormat_cpanel',value:session.token,domain:new URL(baseURL!).hostname,path:'/cpanel',secure:process.env.TEST_PRODUCTION==='1',httpOnly:true,sameSite:'Lax'},{name:'hormat_lang',value:language,url:baseURL!}]);
-  expect((await page.goto('/cpanel/media?path='+folder))?.status()).toBe(200);await expect(page.locator('.media-item')).toHaveCount(3);await expect(page.locator('[data-navigation-id=media] a')).toHaveCount(0);
+  expect((await page.goto('/cpanel/media?path='+folder))?.status()).toBe(200);await expect(page.locator('.media-item')).toHaveCount(3);await expect(page.locator('[data-navigation-id=media] a')).toHaveAttribute('href','/cpanel/media');
   expect(await page.locator('body').innerText()).not.toMatch(/cpanel\.(media|navigation)\./);expect(await page.content()).not.toContain(root);
   await page.locator('.media-item').filter({hasText:'Привет'}).click();await expect(page.locator('.media-item.is-selected')).toHaveCount(1);
   await page.locator('.media-item').filter({hasText:'Привет'}).locator('.media-name').click();await expect(page.locator('#media-dialog')).toBeVisible();await expect(page.locator('[data-detail=path]')).toContainText('Привет Türkmen.txt');await page.locator('#media-dialog .btn-close').click();
@@ -91,7 +91,7 @@ test('Media individual capabilities and auto-registry integration; false view ca
    await page.goto('/cpanel/media?path='+folder);const button=page.locator('#media-manager [data-media-action='+action+']').first();await expect(button).toBeDisabled();
    await pool.query('INSERT INTO cpanel_user_permissions(user_id,key,value) VALUES($1,$2,\'true\')',[id,permission]);await page.reload();await expect(button).toBeEnabled();await pool.query('DELETE FROM cpanel_user_permissions WHERE user_id=$1 AND key=$2',[id,permission]);
   }
-  await page.goto('/cpanel/permissions/'+id);for(const key of ['media.view','media.upload','media.create_folder','media.rename','media.delete'])await expect(page.locator('[data-permission-key="'+key+'"]')).toBeVisible();
+  await page.goto('/cpanel/permissions/'+id);for(const key of ['media.view','media.upload','media.create_folder','media.rename','media.move','media.delete'])await expect(page.locator('[data-permission-key="'+key+'"]')).toBeVisible();
   await pool.query("UPDATE cpanel_user_permissions SET value='false' WHERE user_id=$1 AND key='media.view'",[id]);expect((await page.goto('/cpanel/media'))?.status()).toBe(403);
   const cookie=(await context.cookies()).map(c=>c.name+'='+c.value).join('; ');expect((await context.request.get('/cpanel/api/media/details?path='+folder+'/file.txt',{headers:{Cookie:cookie}})).status()).toBe(403);
  }finally{if(id)await pool.query('DELETE FROM cpanel_users WHERE id=$1',[id]);await rm(root,{recursive:true,force:true});}

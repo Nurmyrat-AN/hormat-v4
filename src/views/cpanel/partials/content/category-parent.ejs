@@ -1,0 +1,12 @@
+<div class="mb-3 category-parent-field">
+ <p class="form-label"><%= t('cpanel.categories.parent') %></p>
+ <button type="button" class="btn btn-outline-secondary w-100 text-start" id="category-parent-toggle" aria-expanded="false" aria-controls="category-parent-picker"></button>
+ <section id="category-parent-picker" class="content-picker mt-2" aria-label="<%= t('cpanel.categories.selectParent') %>" hidden>
+  <label for="category-parent-search" class="form-label"><%= t('cpanel.categories.selectParent') %></label>
+  <input id="category-parent-search" type="search" class="form-control" placeholder="<%= t('cpanel.categories.search') %>">
+  <p id="category-parent-feedback" role="status" class="small mt-2"></p><nav id="category-parent-crumbs" class="category-breadcrumbs"></nav>
+  <div id="category-parent-options" class="category-parent-options mt-2"></div>
+  <div class="d-flex gap-2"><button type="button" id="category-parent-prev" class="btn btn-outline-secondary"><%= t('cpanel.users.previous') %></button><button type="button" id="category-parent-next" class="btn btn-outline-secondary"><%= t('cpanel.users.next') %></button></div>
+ </section>
+ <p id="category-edit-path" class="small text-body-secondary mt-2"></p>
+</div>

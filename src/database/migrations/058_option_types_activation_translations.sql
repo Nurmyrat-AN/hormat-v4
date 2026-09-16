@@ -1,0 +1,16 @@
+INSERT INTO interface_translations(language_code,translation_key,translation_value) VALUES
+('tm','cpanel.optionTypes.default','Esasy saýlaw'),
+('ru','cpanel.optionTypes.default','По умолчанию'),
+('en','cpanel.optionTypes.default','Default'),
+('tm','cpanel.optionTypes.defaultHelp','Sargyt döredilende öňünden saýlanýar. Tertip sanyna bagly däl.'),
+('ru','cpanel.optionTypes.defaultHelp','Предварительно выбирается при оформлении заказа. Не зависит от порядка сортировки.'),
+('en','cpanel.optionTypes.defaultHelp','Preselected at checkout. Independent of sort order.'),
+('tm','cpanel.optionTypes.defaultVisible','Gizlemezden öň esasy saýlaw belligini aýryň ýa-da başga görnüşi saýlaň.'),
+('ru','cpanel.optionTypes.defaultVisible','Перед скрытием снимите флаг «По умолчанию» или выберите другой тип.'),
+('en','cpanel.optionTypes.defaultVisible','Clear Default or choose another default before hiding this option.'),
+('tm','cpanel.optionTypes.saved','Üýtgeşmeler saklandy.'),
+('ru','cpanel.optionTypes.saved','Изменения сохранены.'),
+('en','cpanel.optionTypes.saved','Changes saved.'),
+('tm','cpanel.optionTypes.failed','Üýtgeşmeleri ýüklemek ýa-da saklamak başartmady. Gaýtadan synanyşyň.'),
+('ru','cpanel.optionTypes.failed','Не удалось загрузить или сохранить изменения. Повторите попытку.'),
+('en','cpanel.optionTypes.failed','Could not load or save changes. Please try again.');

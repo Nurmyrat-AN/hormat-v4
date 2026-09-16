@@ -4,7 +4,7 @@ import { lstat, realpath } from 'node:fs/promises';
 export class BrowseError extends Error {
  constructor(readonly status = 404) { super('Media path unavailable'); }
 }
-export const hiddenMediaName = (name: string) => name.startsWith('.') || ['thumbs.db', 'desktop.ini'].includes(name.toLowerCase());
+export const hiddenMediaName = (name: string) => name.startsWith('.') || ['thumbs.db', 'desktop.ini', 'record.json'].includes(name.toLowerCase());
 export function validateMediaPath(relative: string): void {
  if (typeof relative !== 'string' || relative.length > 2048 || /^[a-zA-Z]:/.test(relative) || /[\\%\x00-\x1f\x7f]/.test(relative) || relative.startsWith('/') ||
    (relative !== '' && relative.split('/').some(s => !s || s === '.' || s === '..' || hiddenMediaName(s)))) throw new BrowseError(400);

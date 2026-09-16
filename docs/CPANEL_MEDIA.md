@@ -61,3 +61,13 @@ File Manager endpoints are `/cpanel/api/media/files` (multipart + relative path 
 Human filenames now receive encoded canonical URLs through controlled public serving, retaining safe attachment handling. Rename changes URLs; old references remain unchanged. Existing cache aliases remain ownership/TTL-controlled. Direct files in cache are ordinary files, not domain tokens; their cleanup is administrator-managed. Known cache/domain warnings remain visible.
 
 Rename requires GNU coreutils with `--no-copy --update=none-fail` (verified 9.7/Linux). Complete direct uploads publish with exclusive hard links on the same filesystem. Aborted uploads remove their staging directories; a process crash may leave hidden `.manager-incoming` staging for operator cleanup. Private staging is never browsable/servable. No overwrite fallback exists.
+
+Catalog → Media is enabled following the successful activation regression, protected by media.view. Final validation: 126-test production regression plus targeted final mutation/navigation checks; see the activation report for exact runs. Existing cache public aliases are also checked for filename conflicts.
+
+## Move files and folders
+
+The item menu now offers Move with independent `media.move` permission (or Super User). A dedicated view in the existing modal browses real destination folders with root/ancestor controls; no typed path is required. The endpoint is POST `/cpanel/api/media/move` with `{path,destination}` and CSRF. The folder picker uses GET `/cpanel/api/media/move-folders?path=` under the same Move permission.
+
+Rename preserves the parent; Move preserves the name. Root, same-parent, self/descendant and collision targets reject. Shared path/private-cache rules remain. Tree symlinks and special files reject. Cross-device copy is staged and content-verified before exclusive publication and source removal; an incomplete source removal reports a localized error while keeping the complete destination. No operation repairs database references. Details, Copy URL and search read the refreshed path; Grid/List is retained.
+
+See [permanent Move contract](ARCHITECTURE.md#39-media-file-manager-move) and [verification report](../MEDIA_MOVE_REPORT.md).

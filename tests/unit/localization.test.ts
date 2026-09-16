@@ -83,7 +83,7 @@ test('unusable cache fails initialization; empty values fall back; production do
     await assert.rejects(new LocalizationService(async () => source).load(), /exactly one/);
   }
   await assert.rejects(new LocalizationService(async () => ({ languages: [], translations: [] })).load(), /exactly one/);
-  await assert.rejects(new LocalizationService(async () => ({ ...data(), translations: [] })).load(), /no interface translations/);
+  const empty=new LocalizationService(async()=>({...data(),translations:[]}));await empty.load();assert.equal(empty.translate('en','common.save'),'common.save');
   const source = data();
   source.translations.find((row) => row.language_code === 'ru')!.translation_value = '  ';
   const service = new LocalizationService(async () => source, false, () => assert.fail('Production warning'));
@@ -108,4 +108,29 @@ test('real EJS page escapes translation values', async () => {
   const html = await ejs.renderFile('src/views/frontend/pages/index.ejs', { ...service.forLanguage(), isDevelopment: false });
   assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
   assert.ok(!html.includes('<script>alert(1)</script>'));
+});
+
+test('registry invalidation waits past an older in-flight reload and retries after refresh failure',async()=>{
+ let source=data(),pause:Promise<void>|undefined,release:()=>void=()=>{},fail=false;
+ const service=new LocalizationService(async()=>{const captured=structuredClone(source);if(pause)await pause;if(fail)throw Error('offline');return captured;});await service.load();
+ pause=new Promise(resolve=>{release=resolve;});const old=service.reload();source=data();source.languages=source.languages.filter(l=>l.code!=='ru');service.invalidate();const fresh=service.ensureFresh();pause=undefined;release();await old;await fresh;assert.equal(service.isActive('ru'),false);
+ fail=true;service.invalidate();await assert.rejects(service.ensureFresh(),/offline/);fail=false;source=data();await service.ensureFresh();assert.equal(service.isActive('ru'),true);
+});
+
+
+test('central fallback is requested, dynamic Default, deterministic active then inactive, finally key',async()=>{
+ const source:LocalizationData={languages:[
+  {code:'zz',display_name:'Z',is_default:false,is_active:true,sort_order:2},
+  {code:'aa',display_name:'A',is_default:false,is_active:true,sort_order:2},
+  {code:'dd',display_name:'Default',is_default:true,is_active:true,sort_order:5},
+  {code:'ii',display_name:'Inactive',is_default:false,is_active:false,sort_order:-10},
+ ],translations:[]};
+ for(const [language_code,translation_value]of [['zz','Z'],['aa','A'],['dd','Default'],['ii','Inactive']])source.translations.push({language_code,translation_key:'common.value',translation_value});
+ const service=new LocalizationService(async()=>source);await service.load();
+ assert.equal(service.translate('zz','common.value'),'Z');assert.equal(service.translate('unknown','common.value'),'Default');
+ source.translations.find(r=>r.language_code==='dd')!.translation_value=' \t ';await service.reload();assert.equal(service.translate('unknown','common.value'),'A');
+ source.translations.find(r=>r.language_code==='aa')!.translation_value=null;await service.reload();assert.equal(service.translate('unknown','common.value'),'Z');
+ source.translations.find(r=>r.language_code==='zz')!.translation_value='';await service.reload();assert.equal(service.translate('unknown','common.value'),'Inactive');assert.equal(service.isActive('ii'),false);assert.ok(!service.languages.some(l=>l.code==='ii'));
+ source.translations.find(r=>r.language_code==='ii')!.translation_value=null;await service.reload();assert.equal(service.translate('unknown','common.value'),'common.value');
+ source.translations.find(r=>r.language_code==='zz')!.translation_value='Z';source.translations.find(r=>r.language_code==='aa')!.translation_value='A';source.languages.forEach(l=>l.is_default=l.code==='zz');await service.reload();assert.equal(service.translate('unknown','common.value'),'Z');
 });

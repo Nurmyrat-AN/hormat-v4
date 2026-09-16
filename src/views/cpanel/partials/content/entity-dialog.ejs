@@ -1,0 +1,31 @@
+ <div id="brand-dialog" data-content-dialog class="modal fade content-dialog" tabindex="-1" aria-labelledby="brand-dialog-title"><div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
+  <div class="modal-header"><h2 id="brand-dialog-title" class="modal-title fs-5"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t('cpanel.users.close') %>"></button></div>
+  <div class="modal-body">
+
+   <nav class="content-tabs nav nav-tabs" role="tablist" aria-label="<%= entityTitle %>">
+   <% for(const tab of [{id:'basic',label:t('cpanel.profile.tabs.basic')},{id:'seo',label:t('cpanel.brands.seo')},{id:'gallery',label:t('cpanel.content.gallery')},{id:'products',label:t('cpanel.navigation.products')}]){ %><button id="brand-tab-<%= tab.id %>" type="button" class="nav-link" role="tab" data-tab="<%= tab.id %>" aria-controls="brand-pane-<%= tab.id %>"><span><%= tab.label %></span><small data-tab-state="<%= tab.id %>"></small></button><% } %>
+   </nav>
+   <div id="brand-locks" class="small text-body-secondary mt-3"><p><%= lockTranslations %></p><p><%= lockGallery %></p></div>
+   <section id="brand-pane-basic" role="tabpanel" aria-labelledby="brand-tab-basic" data-pane="basic" class="content-pane">
+    <form id="brand-basic-form" novalidate>
+    <%- include('../content/translatable-field',{fieldId:'brand-name',fieldLabel:t('cpanel.profile.fields.name'),lockedLabel:lockTranslations}) %>
+    <% if(typeof parentPartial==='string'){ %><%- include(parentPartial) %><% } %>
+    <div class="brand-main-field mb-3"><p class="form-label"><%= t('cpanel.brands.mainImage') %></p><div id="brand-main-preview" class="brand-main-preview"></div><p id="brand-main-identity" class="brand-main-identity small mt-2"></p><div class="brand-main-actions"><button type="button" id="brand-main-select" class="btn btn-outline-secondary"><%= t('cpanel.media.selectMedia') %></button><button type="button" id="brand-main-remove" class="btn btn-outline-secondary"><%= t('cpanel.brands.removeMain') %></button></div><p id="brand-main-lock" class="small text-body-secondary"><%= mainLocked %></p></div>
+    <%- include('../content/visibility',{id:'brand-visibility'}) %></form>
+   </section>
+    <section id="brand-pane-seo" role="tabpanel" aria-labelledby="brand-tab-seo" data-pane="seo" class="content-pane" hidden><form id="brand-seo-form" novalidate>
+     <h3 class="fs-6"><%= t('cpanel.brands.seo') %></h3>
+     <label for="brand-slug" class="form-label"><%= t('cpanel.brands.slug') %></label><input id="brand-slug" class="form-control mb-3" maxlength="120" autocomplete="off">
+     <%- include('../content/translatable-field',{fieldId:'brand-seo_title',overrideHelp:t('cpanel.content.baseHelp'),fieldLabel:t('cpanel.brands.seoTitle'),lockedLabel:lockTranslations}) %>
+     <%- include('../content/translatable-field',{fieldId:'brand-seo_description',overrideHelp:t('cpanel.content.baseHelp'),fieldLabel:t('cpanel.brands.seoDescription'),lockedLabel:lockTranslations,multiline:true}) %>
+    </form></section>
+   <section id="brand-pane-gallery" role="tabpanel" aria-labelledby="brand-tab-gallery" data-pane="gallery" class="content-pane" hidden><%- include('../content/gallery') %></section>
+   <section id="brand-pane-products" role="tabpanel" aria-labelledby="brand-tab-products" data-pane="products" class="content-pane" hidden><h3 class="fs-6"><%= t('cpanel.brands.attachedProducts') %></h3><p id="brand-product-count"></p><p class="text-body-secondary"><%= t('cpanel.brands.productsLater') %></p></section>
+   <p id="brand-status" role="status" class="small mt-3 mb-0"></p>
+   <div id="brand-discard" class="alert alert-warning mt-3" role="alert" hidden><p><%= t('cpanel.content.discardPrompt') %></p><button id="brand-keep" type="button" class="btn btn-outline-secondary"><%= t('cpanel.users.cancel') %></button> <button id="brand-discard-confirm" type="button" class="btn btn-danger"><%= t('cpanel.content.discard') %></button></div>
+  </div>
+  <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><%= t('cpanel.users.close') %></button>
+   <button type="button" class="btn btn-success" data-save="basic"></button><button type="button" class="btn btn-success" data-save="seo" hidden></button><button type="button" class="btn btn-success" data-save="gallery" hidden><%= t('cpanel.content.saveGallery') %></button>
+  </div>
+  <%- include('../media/picker') %>
+ </div></div></div>

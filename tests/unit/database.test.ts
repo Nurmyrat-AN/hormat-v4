@@ -45,16 +45,16 @@ test('migration creates the initial languages, complete seed values and runs onl
     { code: 'en', is_default: false, is_active: true },
   ]);
   const keys = await database.query('SELECT translation_key, count(*)::int AS count FROM interface_translations GROUP BY translation_key');
-  assert.equal(keys.rows.length, 284);
+  assert.equal(keys.rows.length, 753);
   assert.ok(keys.rows.every((row) => row.count === 3));
   await migrate(database);
-  assert.equal((await database.query('SELECT * FROM schema_migrations')).rows.length, 19);
-  assert.equal((await database.query('SELECT * FROM interface_translations')).rows.length, 852);
+  assert.equal((await database.query('SELECT * FROM schema_migrations')).rows.length, 70);
+  assert.equal((await database.query('SELECT * FROM interface_translations')).rows.length, 2259);
 });
 
 test('fresh migrations cover every current UI key with real required-language values', async () => {
   const keys = await collectUiKeys();
-  assert.equal(keys.length, 268);
+  assert.equal(keys.length, 710);
   const { rows } = await database.query('SELECT language_code, translation_key, translation_value FROM interface_translations');
   assert.deepEqual(translationIssues(keys, rows), []);
 });
@@ -87,7 +87,7 @@ test('translation keys are unique per language, nonempty and linked to registere
 function start(extra: Record<string, string> = {}) {
   const args = process.env.TEST_PRODUCTION === '1' ? ['dist/server.js'] : ['--import', 'tsx', 'src/server.ts'];
   const child = spawn(process.execPath, args, {
-    env: { ...process.env, PGOPTIONS: `-c search_path=${schema}`, HOST: '127.0.0.1', PORT: '3107', NODE_ENV: 'test', ...extra },
+    env: { ...process.env, PGOPTIONS: `-c search_path=${schema}`, HOST: '127.0.0.1', PORT: '3107', NODE_ENV: 'test', ...extra, VENDOR_SYNC_ENABLED: 'false' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let output = '';
@@ -140,7 +140,7 @@ test('PostgreSQL reload reflects added languages, translation edits and the defa
   await service.load();
   assert.equal(service.isActive('zz-test'), false);
   assert.equal(service.translate('ru', 'frontend.title'), 'Baş sahypa');
-  await database.query("INSERT INTO languages (code, display_name) VALUES ('de', 'Deutsch')");
+  await database.query("INSERT INTO languages (code, display_name, is_active) VALUES ('de', 'Deutsch', true)");
   await database.query("INSERT INTO interface_translations VALUES ('de', 'frontend.title', 'Startseite')");
   assert.equal(service.isActive('de'), false);
   await service.reload();

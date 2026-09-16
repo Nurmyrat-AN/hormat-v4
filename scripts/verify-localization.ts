@@ -8,6 +8,35 @@ import { chromium } from '@playwright/test';
 import { pool } from '../src/database/pool.js';
 import { collectUiKeys, keysInSource, translationIssues } from './localization-integrity.mjs';
 
+if (process.argv.includes('--scope=source-products')) { await import('./verify-source-products-localization.js'); process.exit(0); }
+if (process.argv.includes('--scope=products')) { await import('./verify-products-localization.js'); process.exit(0); }
+
+// A focused UI task can verify its live translations without historical domain mutations.
+if (process.argv.includes('--scope=settings')) {
+  await import('./verify-settings-localization.js');
+  process.exit(0);
+}
+if (process.argv.includes('--scope=option-types')) {
+  await import('./verify-option-types-localization.js');
+  process.exit(0);
+}
+if (process.argv.includes('--scope=interface-translations')) {
+  await import('./verify-interface-translations-localization.js');
+  process.exit(0);
+}
+if (process.argv.includes('--scope=languages')) {
+  await import('./verify-languages-localization.js');
+  process.exit(0);
+}
+if (process.argv.includes('--scope=currencies')) {
+  await import('./verify-currencies-localization.js');
+  process.exit(0);
+}
+if (process.argv.includes('--scope=discounts')) {
+  await import('./verify-discounts-localization.js');
+  process.exit(0);
+}
+
 const baseURL = process.env.LOCALIZATION_URL ?? 'http://127.0.0.1:3000';
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH });
 let testUserId: string | undefined;
@@ -146,7 +175,9 @@ try {
         assert.deepEqual(await assignments(),[{key:'permissions.view',value:true},{key:'users.view',value:true}]);
         console.info(`PASS live Permissions ${language}: actual DB translations, persisted grants and localized read-only/self-edit states`);
         // Real server check is read-only. Synthetic trees and limit/empty fixtures belong to isolated tests.
-        let mediaCorpus=permissionCorpus;
+        // Picker-only Media labels belong to the Brands host, not the standalone File Manager.
+        await page.goto(new URL('/cpanel/brands',baseURL).href);
+        let mediaCorpus=permissionCorpus+await page.locator('body').innerHTML();
         for(const location of ['/cpanel/media','/cpanel/media?path=cache','/cpanel/media?query=no-match-'+randomUUID(),'/cpanel/media?path=missing-'+randomUUID()]){
           await page.goto(new URL(location,baseURL).href);mediaCorpus+=await page.locator('body').innerHTML();
         }
@@ -156,6 +187,32 @@ try {
           assert.ok(!mediaCorpus.includes(key),`media ${language}: exposed ${key}`);
         }
         console.info(`PASS live Media ${language}: read-only real DB labels, dialogs, cache and missing-folder recovery; conditional fixture states checked in isolated browser tests`);
+        const vendorName='localization-vendor-'+randomUUID();
+        try {
+          await page.goto(new URL('/cpanel/vendors',baseURL).href);
+          await page.locator('#vendors-search').fill(vendorName);
+          await page.locator('[data-vendor-action=add]').click();
+          await page.locator('#vendor-name').fill(vendorName);
+          await page.locator('#vendor-url').fill('https://unreachable.example.invalid/database');
+          await page.locator('#vendor-username').fill('localization-reader');
+          await page.locator('#vendor-password').fill(randomUUID());
+          // Keep live verification fixtures out of the enabled production SyncManager.
+          await page.locator('#vendor-active').selectOption('inactive');
+          await page.locator('#vendor-save').click();
+          await page.waitForFunction(expected=>document.querySelector('#vendors-feedback')?.textContent===expected,value(language,'cpanel.vendors.created'));
+          await page.locator('#vendor-dialog').waitFor({state:'hidden'});
+          await page.locator('#vendors-status').selectOption('inactive');
+          await page.locator('.vendor-item').waitFor();
+          const vendorCorpus=permissionCorpus+await page.locator('body').innerHTML();
+          const conditional=new Set(['cpanel.vendors.hours','cpanel.vendors.minutes','cpanel.vendors.seconds','cpanel.vendors.healthPending']);
+          for(const key of keys.filter(key=>key.startsWith('cpanel.vendors.'))){
+            if(!conditional.has(key))assert.ok(vendorCorpus.includes(value(language,key)),`vendors ${language}: missing ${key}`);
+            assert.ok(!vendorCorpus.includes(key),`vendors ${language}: exposed ${key}`);
+          }
+          assert.equal(await page.locator('[data-value=healthLabel]').innerText(),value(language,'cpanel.vendors.notSynced'));
+          console.info(`PASS live Vendors ${language}: real create, PostgreSQL translations, neutral runtime state; disposable vendor removed`);
+        } finally {await pool.query('DELETE FROM vendors WHERE name=$1',[vendorName]);}
+
 
 
       } finally {

@@ -1,0 +1,13 @@
+import {Router,json,type ErrorRequestHandler} from 'express';
+import {requireCpanelAuth,requirePermission,requireCsrf} from '../../cpanel/auth/http.js';
+import {listVendors,detailVendor,mutateVendor,resetVendorSync} from '../../controllers/cpanel/vendors-api.js';
+export const vendorsApi=Router();
+vendorsApi.use(requireCpanelAuth);
+vendorsApi.get('/',requirePermission('vendors.view'),listVendors);
+vendorsApi.get('/:id',requirePermission('vendors.view'),detailVendor);
+vendorsApi.post('/',requirePermission('vendors.create'),requireCsrf,json({limit:'32kb'}),mutateVendor('create'));
+vendorsApi.patch('/:id',requirePermission('vendors.update'),requireCsrf,json({limit:'32kb'}),mutateVendor('update'));
+vendorsApi.post('/:id/status',requirePermission('vendors.status'),requireCsrf,json({limit:'32kb'}),mutateVendor('status'));
+vendorsApi.post('/:id/reset-sync',requirePermission('vendors.reset_sync'),requireCsrf,json({limit:'1kb'}),resetVendorSync);
+const invalid:ErrorRequestHandler=(error,_request,response,next)=>{if(error?.type==='entity.parse.failed'||error?.type==='entity.too.large'){response.status(400).json({success:false,code:'VENDOR_INVALID_REQUEST'});return;}next(error);};
+vendorsApi.use(invalid);

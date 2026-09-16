@@ -17,6 +17,6 @@ export default defineConfig({
     command: process.env.TEST_PRODUCTION === '1' ? 'npm start' : 'npm run dev',
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
-    env: { MEDIA_ROOT: path.resolve('.test-media'), HOST: '127.0.0.1', PORT: port, NODE_ENV: process.env.TEST_PRODUCTION === '1' ? 'production' : 'development' },
+    env: { VENDOR_SYNC_ENABLED: 'false', MEDIA_ROOT: path.resolve('.test-media'), HOST: '127.0.0.1', PORT: port, NODE_ENV: process.env.TEST_PRODUCTION === '1' ? 'production' : 'development' },
   },
 });

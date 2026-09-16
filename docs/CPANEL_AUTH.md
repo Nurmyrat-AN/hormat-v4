@@ -68,7 +68,7 @@ Existing public Socket.IO infrastructure remains intact and conveys no CPanel au
 
 Migration [004_cpanel_auth_translations.sql](../src/database/migrations/004_cpanel_auth_translations.sql) adds six keys with complete tm/ru/en values: `cpanel.auth.invalidCredentials`, `invalidRequest`, `forbidden`, `tooManyAttempts`, `signedInAs`, `logout` (all under `cpanel.auth`). Old mock-only keys remain in historical migration seeds but are no longer rendered.
 
-Run `npm run localization:check`, `npm test`, `npm run build`, and `TEST_PRODUCTION=1 npm test`. `CHROME_PATH=/usr/bin/google-chrome` selects the local browser. Run `npm run localization:verify` against the actual running server after refreshing its localization cache.
+For critical authentication/security changes, run the full checkpoint: `npm run build` then `TEST_PRODUCTION=1 npm test`. `CHROME_PATH=/usr/bin/google-chrome` selects the local browser. For modules merely using unchanged authentication, select relevant authentication/CSRF integration tests under architecture section 42 instead of automatically running all historical suites. When translations change, run localization integrity and verify affected running pages/cache; use the comprehensive `localization:verify` for cross-module localization impact.
 
 Unit integration tests use random isolated schemas. Browser and live-localization tests create randomly named temporary Super Users with random memory-only passwords and remove those profiles afterward (cascading auth/permissions/sessions). They never use/reset the owner's account. Interrupted tests may leave temporary records requiring review/cleanup; normal test completion removes them.
 
