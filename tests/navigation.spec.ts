@@ -35,7 +35,7 @@ test('full roadmap: all languages, themes, disabled behavior, icons, collapsed r
     for (const theme of ['light','dark']) {
       if (await page.locator('html').getAttribute('data-bs-theme') !== theme) await page.locator('#theme-toggle').click();
       const before = page.url();
-      for (const id of ['dashboard','products','carts','interfaceTranslations','systemEvents']) {
+      for (const id of ['dashboard','carts','systemEvents']) {
         const entry = page.locator(`[data-navigation-id="${id}"] > .shell-nav-link`);
         await entry.scrollIntoViewIfNeeded();
         await expect(entry).toBeVisible();
@@ -47,7 +47,7 @@ test('full roadmap: all languages, themes, disabled behavior, icons, collapsed r
     }
     await page.locator('#sidebar-toggle').click();
     await expect(page.locator('.shell-workspace')).toHaveCSS('margin-left', '80px');
-    await expect(page.locator('[data-navigation-id="products"] > span')).toHaveAttribute('title', `${value('cpanel.navigation.products')} — ${value('cpanel.navigation.notAvailable')}`);
+    await expect(page.locator('[data-navigation-id="dashboard"] > span')).toHaveAttribute('title', `${value('cpanel.navigation.dashboard')} — ${value('cpanel.navigation.notAvailable')}`);
     await page.locator('[aria-controls="nav-access"]').click();
     await expect(page.locator('html')).toHaveAttribute('data-sidebar', 'expanded');
     await expect(page.locator('#nav-access')).toBeVisible();
@@ -62,6 +62,7 @@ test('full roadmap: all languages, themes, disabled behavior, icons, collapsed r
   await page.screenshot({ path: 'artifacts/roadmap-mobile-system.png' });
   await page.keyboard.press('Escape');
   await expect(page.locator('#cpanel-sidebar')).not.toHaveClass(/(?:^|\s)show(?:\s|$)/);
-  // Unimplemented roadmap entries do not create endpoints. Permissions now has an explicitly authorized UI route, but remains disabled in navigation.
-  for (const route of ['/cpanel/products','/cpanel/orders']) expect((await page.request.get(route)).status()).toBe(404);
+  // Implemented Products has a real route; planned Orders does not.
+  expect((await page.request.get('/cpanel/products')).status()).toBe(200);
+  expect((await page.request.get('/cpanel/orders')).status()).toBe(404);
 });

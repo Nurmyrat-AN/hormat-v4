@@ -35,7 +35,9 @@ export const navigationRoadmap: NavigationGroup[] = [
         translationKey: "cpanel.navigation.products",
         icon: "box",
         kind: "page",
-        status: "disabled"
+        status: "enabled",
+        permission: "products.view",
+        href: "/cpanel/products"
       },
       {
         id: "categories",

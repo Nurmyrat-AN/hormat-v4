@@ -9,8 +9,8 @@ test('roadmap is complete, unique, key-only and disabled independently of permis
   const items: NavigationItem[] = [];
   const visit = (item: NavigationItem) => { items.push(item); if (item.kind === 'submenu') item.children.forEach(visit); };
   navigationRoadmap.forEach(g => g.items.forEach(visit));
-  assert.equal(items.filter(i => i.kind === 'page' && i.status === 'disabled').length, 16);
-  assert.deepEqual(items.filter(i => i.kind === 'page' && i.status === 'enabled').map(i => i.id), ['foundation','categories','brands','media','discounts','vendors','sourceProducts','frontendCurrencies','vendorCurrencyRates','deliveryTypes','paymentTypes','orderStatuses','users','permissions','languages','interfaceTranslations','settings']);
+  assert.equal(items.filter(i => i.kind === 'page' && i.status === 'disabled').length, 15);
+  assert.deepEqual(items.filter(i => i.kind === 'page' && i.status === 'enabled').map(i => i.id), ['foundation','products','categories','brands','media','discounts','vendors','sourceProducts','frontendCurrencies','vendorCurrencyRates','deliveryTypes','paymentTypes','orderStatuses','users','permissions','languages','interfaceTranslations','settings']);
   assert.equal(new Set(items.map(i => i.id)).size, items.length);
   const keys = await collectUiKeys();
   const svg = await readFile('src/public/cpanel/images/shell-icons.svg', 'utf8');
@@ -90,3 +90,12 @@ test('Settings navigation requires settings.view independently',()=>{const item=
 test('Order Statuses navigation requires its own view permission',()=>{const get=(allowed:boolean)=>prepareNavigation(navigationRoadmap,k=>k,'/cpanel/order-statuses',k=>allowed&&k==='order_statuses.view').find(g=>g.id==='marketplace')?.items.find(i=>i.id==='orderStatuses');assert.equal(get(false),undefined);assert.equal(get(true)?.href,'/cpanel/order-statuses');assert.equal(get(true)?.active,true);});
 
 test('Source Products enabled navigation requires its own view permission',()=>{const get=(allowed:boolean)=>prepareNavigation(navigationRoadmap,k=>k,'/cpanel/source-products',k=>allowed&&k==='source_products.view').find(g=>g.id==='vendors')?.items.find(i=>i.id==='sourceProducts');assert.equal(get(false),undefined);assert.equal(get(true)?.href,'/cpanel/source-products');assert.equal(get(true)?.active,true);});
+
+
+test('Products navigation requires products.view and highlights the real browser', () => {
+  const get = (allowed: boolean) => prepareNavigation(navigationRoadmap, k => k, '/cpanel/products', k => allowed && k === 'products.view').find(g => g.id === 'catalog')?.items.find(i => i.id === 'products');
+  assert.equal(get(false), undefined);
+  assert.equal(get(true)?.status, 'enabled');
+  assert.equal(get(true)?.href, '/cpanel/products');
+  assert.equal(get(true)?.active, true);
+});

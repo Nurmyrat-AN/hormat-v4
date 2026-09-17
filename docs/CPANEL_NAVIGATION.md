@@ -1,4 +1,4 @@
-**Current activation:** Foundation, Categories, Brands, Media, Vendors, Users and Permissions are enabled. Domain entries require their own effective view permission; Foundation requires authentication. The other 24 roadmap pages remain disabled. See [Brands activation](CPANEL_BRANDS.md).
+**Current activation:** The authoritative availability and per-module view permissions are in `src/cpanel/shell/navigation.ts`. Catalog → Products is enabled at `/cpanel/products` and requires effective `products.view` (or Super User). Historical activation notes below describe their original stages.
 
 # CPanel navigation roadmap
 
