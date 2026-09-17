@@ -61,7 +61,7 @@ test('Many-to-many FK/uniqueness and real counts in list/details; search is para
  const a=await create('Count Needle %'),b=await create('Count Other');
  const vendor=(await db.query("INSERT INTO vendors(name,url,username,password_encrypted,is_active) VALUES('fixture','https://example.invalid/db','fixture',$1,false) RETURNING id",[new VendorCredentials(config.vendors.credentialsKey).encryptSecret('fixture')])).rows[0].id;
  const source=(await db.query("INSERT INTO source_products(vendor_id,source_id,name) VALUES($1,'discount-count','Count fixture') RETURNING id",[vendor])).rows[0].id;
- const products=(await db.query('INSERT INTO products(source_product_id) SELECT $1 FROM generate_series(1,2) RETURNING id',[source])).rows;
+ const products=(await db.query('INSERT INTO products(source_product_id,name) SELECT $1,\'Fixture Product\' FROM generate_series(1,2) RETURNING id',[source])).rows;
  for(const [product,discount]of [[products[0].id,a],[products[0].id,b],[products[1].id,a]])await db.query('INSERT INTO product_discounts(product_id,discount_id) VALUES($1,$2)',[product,discount]);
  await assert.rejects(db.query('INSERT INTO product_discounts(product_id,discount_id) VALUES($1,$2)',[products[0].id,a]),{code:'23505'});await assert.rejects(db.query('INSERT INTO product_discounts(product_id,discount_id) VALUES(9223372036854775807,$1)',[a]),{code:'23503'});
  assert.equal((await service.details(root,a)).row.productCount,2);assert.equal((await service.details(root,b)).row.productCount,1);const result=await service.list(root,{query:'%'});assert.deepEqual(result.rows.map(row=>row.id),[a]);assert.equal(result.rows[0].productCount,2);

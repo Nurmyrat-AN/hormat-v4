@@ -52,10 +52,10 @@ test('real direct/recursive counts are batched and update after moving a subtree
  const vendor=(await db.query("INSERT INTO vendors(name,url,username,password_encrypted,is_active) VALUES('fixture','https://example.invalid/db','fixture',$1,false) RETURNING id",[new VendorCredentials(config.vendors.credentialsKey).encryptSecret('fixture')])).rows[0].id;
  const source=(await db.query("INSERT INTO source_products(vendor_id,source_id,name) VALUES($1,'category-count','Count fixture') RETURNING id",[vendor])).rows[0].id;
  const a=await create('Count A'),b=await create('Count B',a),c=await create('Count C',b),x=await create('Count X');
- for(const [id,count]of [[a,2],[b,3],[c,4]] as const)await db.query('INSERT INTO products(source_product_id,category_id) SELECT $1,$2 FROM generate_series(1,$3::int)',[source,id,count]);
+ for(const [id,count]of [[a,2],[b,3],[c,4]] as const)await db.query('INSERT INTO products(source_product_id,category_id,name) SELECT $1,$2,\'Fixture Product\' FROM generate_series(1,$3::int)',[source,id,count]);
  for(const [id,direct,total]of [[a,2,9],[b,3,7],[c,4,4]] as const){const row=(await service.details(root,id)).row;assert.equal(row.directProducts,direct);assert.equal(row.totalProducts,total);const list=(await service.list(root,{query:'Count'})).rows.find(row=>row.id===id)!;assert.equal(list.totalProducts,total);}
  await service.mutate(root,'basic',b,{parent_id:x});assert.equal((await service.details(root,a)).row.totalProducts,2);assert.equal((await service.details(root,x)).row.totalProducts,7);
- await assert.rejects(db.query('INSERT INTO products(source_product_id,category_id) VALUES($1,9223372036854775807)',[source]),{code:'23503'});
+ await assert.rejects(db.query('INSERT INTO products(source_product_id,category_id,name) VALUES($1,9223372036854775807,\'Fixture Product\')',[source]),{code:'23503'});
  assert.equal((await db.query('SELECT count(*) FROM products WHERE source_product_id=$1',[source])).rows[0].count,'9');
 });
 test('Basic, SEO and field translations persist independently and empty overrides fall back',async()=>{
@@ -93,7 +93,7 @@ test('Category Move preserves identity, content, subtree and Product links; reco
  await service.mutate(root,'basic',b,{main_media_reference:'a.png',is_visible:true});await service.mutate(root,'seo',b,{seo_title:'SEO',seo_description:'Description'});await service.mutate(root,'translations',b,{translations:{ru:'Имя'}});await service.mutate(root,'gallery',b,{original:[],items:['a.png','b.png']});
  const vendor=(await db.query("INSERT INTO vendors(name,url,username,password_encrypted,is_active) VALUES('move fixture','https://example.invalid/db','fixture',$1,false) RETURNING id",[new VendorCredentials(config.vendors.credentialsKey).encryptSecret('fixture')])).rows[0].id;
  const source=(await db.query("INSERT INTO source_products(vendor_id,source_id,name) VALUES($1,'move-fixture','Fixture') RETURNING id",[vendor])).rows[0].id;
- await db.query('INSERT INTO products(source_product_id,category_id) VALUES($1,$2),($1,$3)',[source,b,d]);
+ await db.query('INSERT INTO products(source_product_id,category_id,name) VALUES($1,$2,\'Fixture Product\'),($1,$3,\'Fixture Product\')',[source,b,d]);
  const before=await stored(b),children=[await stored(c),await stored(d)],media=await gallery(b),translations=(await db.query('SELECT * FROM category_translations WHERE category_id=$1',[b])).rows,products=(await db.query('SELECT * FROM products WHERE source_product_id=$1 ORDER BY id',[source])).rows;
  assert.equal((await service.details(root,a)).row.totalProducts,2);assert.equal((await service.details(root,x)).row.totalProducts,0);
  await service.mutate(root,'basic',b,{parent_id:x});const afterMove=await stored(b);for(const key of Object.keys(before).filter(key=>!['parent_id','updated_at','updated_by'].includes(key)))assert.deepEqual(afterMove[key],before[key]);assert.equal(afterMove.parent_id,x);

@@ -19,6 +19,12 @@ export class BrandsRepository {
   }catch(error){await client.query('ROLLBACK').catch(()=>undefined);throw error;}finally{client.release();}
  }
  async get(client:PoolClient,id:string,lock=false){const row=(await client.query<BrandRecord>(`SELECT * FROM brands WHERE id=$1${lock?' FOR UPDATE':''}`,[id])).rows[0];if(!row)throw new BrandError('BRAND_NOT_FOUND',404);return row;}
+ async lookup(client:PoolClient,query:string,page:number,selected:string|null){
+  const rows=(await client.query('SELECT id::text,name FROM brands WHERE ($1::bigint IS NOT NULL AND id=$1) OR ($1::bigint IS NULL AND name ILIKE $2) ORDER BY name,id LIMIT 21 OFFSET $3',[selected,'%'+query.replace(/[\\%_]/g,'\\$&')+'%',selected?0:(page-1)*20])).rows;
+  const visible=rows.slice(0,20);
+
+  return {options:visible.map(row=>({value:row.id,label:row.name})),hasMore:rows.length>20,nextPage:rows.length>20?page+1:null};
+ }
  async languages(client:PoolClient){return (await client.query('SELECT code,display_name,is_default FROM languages WHERE is_active ORDER BY sort_order,code')).rows;}
  async list(client:PoolClient,query:string,visibility:boolean|null,page:number){
   const values=[visibility,'%'+query.replace(/[\\%_]/g,'\\$&')+'%'];

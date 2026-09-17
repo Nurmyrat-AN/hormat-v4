@@ -1,0 +1,14 @@
+<div data-attached-products>
+ <label class="form-label" for="attached-product"><%= t('cpanel.attachments.attach') %></label>
+ <%- include('async-autocomplete',{id:'attached-product',placeholder:t('cpanel.attachments.search')}) %>
+ <div data-move-confirm class="alert alert-warning mt-3" role="alertdialog" aria-label="<%= t('cpanel.attachments.move') %>" hidden>
+  <p data-move-description></p>
+  <button type="button" data-move-cancel class="btn btn-outline-secondary"><%= t('cpanel.users.cancel') %></button>
+  <button type="button" data-move-accept class="btn btn-success"><%= t('cpanel.attachments.move') %></button>
+ </div>
+ <p data-attached-status role="status" class="small my-2"></p>
+ <div data-attached-list></div>
+ <button type="button" data-attached-more class="btn btn-sm btn-outline-secondary mt-2" hidden><%= t('cpanel.autocomplete.more') %></button>
+ <button type="button" data-attached-retry class="btn btn-sm btn-outline-secondary mt-2" hidden><%= t('cpanel.autocomplete.retry') %></button>
+ <% const attachmentLabels={attached:t('cpanel.attachments.attached'),detached:t('cpanel.attachments.detached'),current:t('cpanel.attachments.current'),destination:t('cpanel.attachments.destination'),detach:t('cpanel.attachments.detach'),empty:t('cpanel.autocomplete.empty'),error:t('cpanel.content.saveFailed'),denied:t('cpanel.auth.forbidden'),loading:t('cpanel.media.loading'),actions:t('cpanel.users.actions'),visible:t('cpanel.content.visible'),hidden:t('cpanel.content.hidden')}; for(const [key,value] of Object.entries(attachmentLabels)){ %><span hidden data-attachment-label="<%= key %>"><%= value %></span><% } %>
+</div>

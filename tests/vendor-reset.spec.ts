@@ -11,7 +11,7 @@ async function fixture(){
  await pool.query('INSERT INTO vendor_sync_sources(vendor_id,source_url) SELECT id,url FROM vendors WHERE id=$1',[id]);
  const w=(await pool.query("INSERT INTO warehouses(vendor_id,source_id,name) VALUES($1,'w','Warehouse') RETURNING id",[id])).rows[0].id;
  const p=(await pool.query("INSERT INTO source_products(vendor_id,source_id,name) VALUES($1,'p','Product') RETURNING id",[id])).rows[0].id;
- await pool.query("INSERT INTO product_barcodes(vendor_id,product_id,barcode) VALUES($1,$2,'00123')",[id,p]);await pool.query('INSERT INTO products(source_product_id) VALUES($1)',[p]);
+ await pool.query("INSERT INTO product_barcodes(vendor_id,product_id,barcode) VALUES($1,$2,'00123')",[id,p]);await pool.query('INSERT INTO products(source_product_id,name) VALUES($1,\'Fixture Product\')',[p]);
  await pool.query('INSERT INTO product_stocks(vendor_id,product_id,warehouse_id,stock) VALUES($1,$2,$3,-10)',[id,p,w]);await pool.query("INSERT INTO source_stock_movements(vendor_id,source_document_id,product_id,warehouse_id,stock_delta) VALUES($1,'sale',$2,$3,-10)",[id,p,w]);
  return {id,name,p,w};
 }

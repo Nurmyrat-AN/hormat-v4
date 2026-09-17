@@ -195,7 +195,7 @@ See [Reset Sync Data contract](docs/VENDOR_RESET_SYNC.md) for the selected-Vendo
 
 Authenticated `/cpanel/brands` is PostgreSQL-backed and enabled under Catalog for staff with `brands.view` (or Super User). Approved Create → Edit, inline Name translations, dedicated Main Image, ordered Gallery and independent saves are active. New Brands stay Hidden until explicitly published by staff with `brands.visibility`. The reusable filesystem Media Picker uses existing browse/upload services; no physical Media copy or deletion is performed by Brands.
 
-Brands also has canonical slug, independently translated SEO fields and real Product counts. Its Products tab is informational only; no attachment management is implemented. SEO has its own tab and independent Save SEO action. See architecture sections 53–54.
+Brands also has canonical slug, independently translated SEO fields and real Product counts. Its Products tab supports shared immediate attachment/detachment and confirmed Brand moves. SEO has its own tab and independent Save SEO action. See architecture sections 53–54.
 
 See [Brands contract and exact schema](docs/CPANEL_BRANDS.md), [Media Picker](docs/MEDIA_PICKER.md), [activation report](BRANDS_ACTIVATION_REPORT.md), and [focused acceptance](docs/BRANDS_ACCEPTANCE.md).
 
@@ -212,11 +212,11 @@ The live verification defaults to port 3000 (`LOCALIZATION_URL` overrides), chec
 
 ## Categories module
 
-`/cpanel/categories` provides the persistent recursive folder browser and shared content editor under `categories.view`. See [Categories contract](docs/CPANEL_CATEGORIES.md). Parent moves are cycle-checked, independent saves persist in PostgreSQL, and direct/recursive counts use nullable products.category_id. Product attachment management and Category deletion remain deferred.
+`/cpanel/categories` provides the persistent recursive folder browser and shared content editor under `categories.view`. See [Categories contract](docs/CPANEL_CATEGORIES.md). Parent moves are cycle-checked, independent saves persist in PostgreSQL, and direct/recursive counts use nullable products.category_id. Direct Product attachment management is active; Category deletion remains deferred.
 
 ## Discounts module
 
-`/cpanel/discounts` uses persistent discounts, discount_translations and product_discounts under independent discounts.view/create/update/visibility permissions. Basic, Rules and inline Name translations save independently with the approved footer. Counts are real; Products remains informational. Percent rules accept 0–100, decimal values use NUMERIC, and the name-on-product flag is presentation-only. Pricing, winner selection, Attach/Detach and Delete remain deferred. See [Discounts contract](docs/CPANEL_DISCOUNTS.md).
+`/cpanel/discounts` uses persistent discounts, discount_translations and product_discounts under independent discounts.view/create/update/visibility permissions. Basic, Rules and inline Name translations save independently with the approved footer. Counts are real; Products supports shared immediate attachment/detachment. Percent rules accept 0–100, decimal values use NUMERIC, and the name-on-product flag is presentation-only. Pricing, winner selection and Delete remain deferred. See [Discounts contract](docs/CPANEL_DISCOUNTS.md).
 
 ## Currency Configuration
 

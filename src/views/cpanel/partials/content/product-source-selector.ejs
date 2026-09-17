@@ -1,0 +1,13 @@
+<div class="modal fade product-source-selector" id="product-source-selector" tabindex="-1" aria-labelledby="product-source-selector-title">
+ <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <header class="modal-header"><h2 class="modal-title fs-5" id="product-source-selector-title"><%= t('cpanel.products.add') %></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="<%= t('cpanel.users.close') %>"></button></header>
+  <div class="modal-body">
+   <label class="form-label" for="product-create-vendor"><%= t('cpanel.sourceProducts.vendor') %> <span aria-hidden="true">*</span></label>
+   <%- include('async-autocomplete',{id:'product-create-vendor',placeholder:t('cpanel.sourceProducts.vendorSearch')}) %>
+   <label class="form-label mt-3" for="product-create-source"><%= t('cpanel.products.source') %> <span aria-hidden="true">*</span></label>
+   <%- include('async-autocomplete',{id:'product-create-source',placeholder:t('cpanel.productCreate.vendorFirst')}) %>
+   <span data-source-placeholder hidden><%= t('cpanel.products.selectSource') %></span>
+  </div>
+  <footer class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><%= t('cpanel.users.close') %></button><button type="button" class="btn btn-success" data-create-proceed disabled><%= t('cpanel.productCreate.proceed') %></button></footer>
+ </div></div>
+</div>

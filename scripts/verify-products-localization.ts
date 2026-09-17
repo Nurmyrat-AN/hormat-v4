@@ -15,7 +15,7 @@ try{
  const session=await sessions.create(actor),context=await browser.newContext();
  await context.addCookies([{name:'hormat_cpanel',value:session.token,url:base+'/cpanel',httpOnly:true,sameSite:'Lax'}]);
  const page=await context.newPage();
- const keys=[...new Set((await Promise.all(['src/views/cpanel/pages/products.ejs','src/views/cpanel/pages/products-content.ejs','src/views/cpanel/partials/content/translatable-field.ejs','src/views/cpanel/partials/content/gallery.ejs','src/views/cpanel/partials/media/picker.ejs'].map(file=>readFile(file,'utf8')))).flatMap(keysInSource))].filter(key=>key!=='cpanel.content.saved');
+ const keys=[...new Set((await Promise.all(['src/views/cpanel/pages/products.ejs','src/views/cpanel/pages/products-content.ejs','src/views/cpanel/partials/content/product-editor.ejs','src/views/cpanel/partials/content/product-source-selector.ejs','src/views/cpanel/partials/content/translatable-field.ejs','src/views/cpanel/partials/content/gallery.ejs','src/views/cpanel/partials/media/picker.ejs'].map(file=>readFile(file,'utf8')))).flatMap(keysInSource))].filter(key=>key!=='cpanel.content.saved');
  const {rows}=await pool.query('SELECT language_code,translation_key,translation_value FROM interface_translations');assert.deepEqual(translationIssues(keys,rows),[]);
  for(const language of ['tm','ru','en']){
   let corpus='';

@@ -19,6 +19,12 @@ export class CategoriesRepository {
   }catch(error){await client.query('ROLLBACK').catch(()=>undefined);throw error;}finally{client.release();}
  }
  async get(client:PoolClient,id:string,lock=false){const row=(await client.query<CategoryRecord>(`SELECT * FROM categories WHERE id=$1${lock?' FOR UPDATE':''}`,[id])).rows[0];if(!row)throw new CategoryError('CATEGORY_NOT_FOUND',404);return row;}
+ async lookup(client:PoolClient,query:string,page:number,selected:string|null){
+  const rows=(await client.query('SELECT id::text,name FROM categories WHERE ($1::bigint IS NOT NULL AND id=$1) OR ($1::bigint IS NULL AND name ILIKE $2) ORDER BY name,id LIMIT 21 OFFSET $3',[selected,'%'+query.replace(/[\\%_]/g,'\\$&')+'%',selected?0:(page-1)*20])).rows;
+  const visible=rows.slice(0,20);
+  const paths=await this.paths(client,visible.map(row=>row.id));
+  return {options:visible.map(row=>({value:row.id,label:row.name,secondaryText:(paths.get(row.id)??[]).slice(0,-1).map(parent=>parent.name).join(' / ')})),hasMore:rows.length>20,nextPage:rows.length>20?page+1:null};
+ }
  async languages(client:PoolClient){return (await client.query('SELECT code,display_name,is_default FROM languages WHERE is_active ORDER BY sort_order,code')).rows;}
  async translations(client:PoolClient,id:string){return (await client.query('SELECT t.language_code,t.name,t.seo_title,t.seo_description FROM category_translations t JOIN languages l ON l.code=t.language_code AND l.is_active WHERE t.category_id=$1 ORDER BY t.language_code',[id])).rows;}
  async gallery(client:PoolClient,id:string):Promise<string[]>{return (await client.query('SELECT media_reference FROM category_media WHERE category_id=$1 ORDER BY sort_order,media_reference',[id])).rows.map(row=>row.media_reference);}

@@ -1,13 +1,15 @@
+import {AttachedProducts} from './attached-products.js';
 import {ContentEditorState} from './editor-state.js';
 import {TranslatableField} from './translatable-field.js';
 import {MediaPicker} from '../media/picker.js';
 import {mediaPreview} from '../media/preview.js';
 /** Shared content dialog. Callers own persistence and domain-specific parent/product presentation. */
-export function createContentEditor({root,can,labels,languages,persist,persistTranslations,onSaved,message,productsText,initialBasic=()=>({}),onRender}){
+export function createContentEditor({kind,root,can,labels,languages,persist,persistTranslations,onSaved,message,productsText,initialBasic=()=>({}),onRender}){
 const dialog=root.querySelector('[data-content-dialog]'),modal=bootstrap.Modal.getOrCreateInstance(dialog);
 const find=id=>dialog.querySelector('#'+id),name=find('brand-name'),visibility=find('brand-visibility');
 const picker=new MediaPicker(root.querySelector('[data-media-picker]'),dialog);
 let editor,selected,tab='basic',busy=false,discard=false,lastError='';
+const attachments=new AttachedProducts(dialog.querySelector('[data-attached-products]'),{kind,csrf:root.dataset.csrf,canView:can.productView,canUpdate:can.update,onCounts:counts=>{if(selected){Object.assign(selected,kind==='categories'?{directProducts:counts.direct,totalProducts:counts.total}:{productCount:counts.direct});find('brand-product-count').textContent=productsText(selected);onSaved(selected);}}});
 const copy=value=>structuredClone(value);
 const fields=['name','seo_title','seo_description'];
 const scope=field=>field==='name'?'basic':'seo';
@@ -51,9 +53,9 @@ function chooseMedia(purpose,trigger){
 }
 find('brand-main-select').addEventListener('click',event=>chooseMedia('main',event.currentTarget));
 find('brand-main-remove').addEventListener('click',()=>{if(busy||!can.update||!editor.id)return;editor.set('basic',{...editor.sections.basic.draft,mainMedia:null});status();});
-function switchTab(key){if(busy||(!editor.id&&key!=='basic'))return;tab=key;status();if(key==='gallery')gallery();}
+function switchTab(key){if(busy||(!editor.id&&key!=='basic'))return;tab=key;status();if(key==='gallery')gallery();if(key==='products'){if(attachments.id!==editor.id)attachments.reset(editor.id);void attachments.load();}}
 dialog.querySelectorAll('[data-tab]').forEach(button=>{button.addEventListener('click',()=>switchTab(button.dataset.tab));button.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const tabs=[...dialog.querySelectorAll('[data-tab]:not(:disabled)')],index=tabs.indexOf(button);const next=event.key==='Home'?tabs[0]:event.key==='End'?tabs.at(-1):tabs[(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];next.click();next.focus();});});
-function open(row){selected=row;editor=new ContentEditorState({id:row?.id??null,basic:row?.basic??{name:'',is_visible:false,mainMedia:null,...initialBasic()},seo:row?.seo??{slug:'',seo_title:'',seo_description:''},gallery:row?.gallery??[]});for(const field of fields)translationFields[field].reset(overrides(row,field));tab='basic';discard=false;find('brand-discard').hidden=true;find('brand-status').textContent=!can.update&&!can.visibility&&row?labels.readOnly:'';for(const field of [...fields,'slug'])find('brand-'+field).value=editor.sections[scope(field)].draft[field];visibility.value=editor.sections.basic.draft.is_visible?'visible':'hidden';name.classList.remove('is-invalid');name.removeAttribute('aria-invalid');find('brand-name-error').textContent='';find('brand-name-error').hidden=true;status();gallery();modal.show();}
+function open(row){attachments.reset(row?.id??null);selected=row;editor=new ContentEditorState({id:row?.id??null,basic:row?.basic??{name:'',is_visible:false,mainMedia:null,...initialBasic()},seo:row?.seo??{slug:'',seo_title:'',seo_description:''},gallery:row?.gallery??[]});for(const field of fields)translationFields[field].reset(overrides(row,field));tab='basic';discard=false;find('brand-discard').hidden=true;find('brand-status').textContent=!can.update&&!can.visibility&&row?labels.readOnly:'';for(const field of [...fields,'slug'])find('brand-'+field).value=editor.sections[scope(field)].draft[field];visibility.value=editor.sections.basic.draft.is_visible?'visible':'hidden';name.classList.remove('is-invalid');name.removeAttribute('aria-invalid');find('brand-name-error').textContent='';find('brand-name-error').hidden=true;status();gallery();modal.show();}
 
 function basicChanged(){editor.set('basic',{...editor.sections.basic.draft,name:name.value,is_visible:visibility.value==='visible'});status();}
 name.addEventListener('input',basicChanged);for(const field of scopeFields('seo'))find('brand-'+field).addEventListener('input',()=>{editor.set('seo',Object.fromEntries(scopeFields('seo').map(key=>[key,find('brand-'+key).value])));status();});visibility.addEventListener('change',basicChanged);

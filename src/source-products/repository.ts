@@ -12,11 +12,8 @@ const projection=`p.id::text,p.name,p.source_id,p.price::text,p.is_active,p.prop
  (SELECT count(*)::int FROM product_barcodes b WHERE b.product_id=p.id AND b.vendor_id=p.vendor_id) AS barcode_count,
  (SELECT b.barcode FROM product_barcodes b WHERE b.product_id=p.id AND b.vendor_id=p.vendor_id ORDER BY b.id LIMIT 1) AS barcode_preview`;
 const joins='JOIN vendors v ON v.id=p.vendor_id LEFT JOIN currencies c ON c.id=p.currency_id AND c.vendor_id=p.vendor_id LEFT JOIN measures m ON m.id=p.measure_id AND m.vendor_id=p.vendor_id';
-/** Read-only query service shared by the browser and future picker adapters. */
-export class SourceProductsRepository {
- constructor(readonly database:Pool=pool){}
- async read<T>(access:SourceAccess,run:(db:PoolClient)=>Promise<T>){if(!await access.hasPermission('source_products.view'))throw new SourceQueryError(403);const db=await this.database.connect();try{await db.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const result=await run(db);await db.query('COMMIT');return result;}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}}
- async list(access:SourceAccess,raw:Record<string,unknown>){const q=sourceQuery(raw);return this.read(access,async db=>{
+/** One authoritative filter compiler for browser reads and bulk review/creation. */
+export function sourceWhere(q:Record<string,string>){
   const values:unknown[]=[],clauses:string[]=[];const bind=(v:unknown)=>{values.push(v);return '$'+values.length;};
   const barcode=(param:string)=>`EXISTS(SELECT 1 FROM product_barcodes b WHERE b.product_id=p.id AND b.vendor_id=p.vendor_id AND b.barcode ILIKE ${param})`;
   if(q.query.trim()){const param=bind(pattern(q.query));const expressions=fields.filter(f=>!['all','barcode'].includes(f)).map(f=>`p.${f} ILIKE ${param}`);clauses.push(q.field==='all'?'('+[...expressions,barcode(param)].join(' OR ')+')':q.field==='barcode'?barcode(param):`p.${q.field} ILIKE ${param}`);}
@@ -26,6 +23,14 @@ export class SourceProductsRepository {
   if(q.connection)clauses.push((q.connection==='none'?'NOT ':'')+'EXISTS(SELECT 1 FROM products x WHERE x.source_product_id=p.id)');
   for(let n=1;n<=5;n++)if(q['property_'+n]?.trim())clauses.push(`p.property_${n} ILIKE ${bind(pattern(q['property_'+n]))}`);
   const where=clauses.length?clauses.join(' AND '):'TRUE';
+  return {values,where};
+}
+/** Read-only query service shared by the browser and future picker adapters. */
+export class SourceProductsRepository {
+ constructor(readonly database:Pool=pool){}
+ async read<T>(access:SourceAccess,run:(db:PoolClient)=>Promise<T>){if(!await access.hasPermission('source_products.view'))throw new SourceQueryError(403);const db=await this.database.connect();try{await db.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');const result=await run(db);await db.query('COMMIT');return result;}catch(e){await db.query('ROLLBACK');throw e;}finally{db.release();}}
+ async list(access:SourceAccess,raw:Record<string,unknown>){const q=sourceQuery(raw);return this.read(access,async db=>{
+  const {values,where}=sourceWhere(q);
   const total=Number((await db.query(`SELECT count(*) FROM source_products p WHERE ${where}`,values)).rows[0].count);
   const page=Math.min(Number(q.page),Math.max(1,Math.ceil(total/12)));
   const rows=(await db.query(`SELECT ${projection} FROM source_products p ${joins} WHERE ${where} ORDER BY p.name ${q.sort==='name_desc'?'DESC':'ASC'},p.id LIMIT 12 OFFSET $${values.length+1}`,[...values,(page-1)*12])).rows;

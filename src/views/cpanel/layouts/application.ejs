@@ -8,16 +8,19 @@
   <% if(typeof permissionsPage !== 'undefined' && permissionsPage) { %><link rel="stylesheet" href="/public/cpanel/css/users.css"><link rel="stylesheet" href="/public/cpanel/css/permissions.css"><% } %>
 <% if(typeof mediaPage !== 'undefined' && mediaPage) { %><link rel="stylesheet" href="/public/cpanel/css/media-browser.css"><% } %>
 <% if(typeof vendorsPage !== 'undefined' && vendorsPage) { %><link rel="stylesheet" href="/public/cpanel/css/vendors.css"><% } %>
-<% if((typeof productsPage !== 'undefined' && productsPage)||(typeof brandsPage !== 'undefined' && brandsPage)||(typeof categoriesPage !== 'undefined' && categoriesPage)) { %><link rel="stylesheet" href="/public/cpanel/css/brands.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/media-picker.css"><% } %>
+<% if((typeof sourceProductsPage !== 'undefined' && sourceProductsPage)||(typeof productsPage !== 'undefined' && productsPage)||(typeof brandsPage !== 'undefined' && brandsPage)||(typeof categoriesPage !== 'undefined' && categoriesPage)) { %><link rel="stylesheet" href="/public/cpanel/css/brands.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/media-picker.css"><% } %>
 <% if(typeof categoriesPage !== 'undefined' && categoriesPage){ %><link rel="stylesheet" href="/public/cpanel/css/categories.css"><% } %>
 <% if(typeof discountsPage !== 'undefined' && discountsPage){ %><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/discounts.css"><% } %>
 <% if(typeof currenciesPage!=='undefined'&&currenciesPage){ %><link rel="stylesheet" href="/public/cpanel/css/currencies.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><% } %>
 <% if(typeof interfaceTranslationsPage!=='undefined'&&interfaceTranslationsPage){ %><link rel="stylesheet" href="/public/cpanel/css/interface-translations.css"><% } %>
 <% if(typeof languagesPage!=='undefined'&&languagesPage){ %><link rel="stylesheet" href="/public/cpanel/css/languages.css"><% } %>
 <% if(typeof optionTypesPage!=='undefined'&&optionTypesPage){ %><link rel="stylesheet" href="/public/cpanel/css/option-types.css"><link rel="stylesheet" href="/public/cpanel/css/translatable-field.css"><link rel="stylesheet" href="/public/cpanel/css/media-picker.css"><% } %>
-<% if(typeof productsPage!=='undefined'&&productsPage){ %><link rel="stylesheet" href="/public/cpanel/css/products.css"><% } %>
+<% if((typeof productsPage!=='undefined'&&productsPage)||(typeof sourceProductsPage!=='undefined'&&sourceProductsPage)){ %><link rel="stylesheet" href="/public/cpanel/css/products.css"><% } %>
 <% if(typeof sourceProductsPage!=='undefined'&&sourceProductsPage){ %><link rel="stylesheet" href="/public/cpanel/css/source-products.css">
 <link rel="stylesheet" href="/public/cpanel/css/async-autocomplete.css"><% } %>
+<% if((typeof productsPage!=='undefined'&&productsPage)||(typeof sourceProductsPage!=='undefined'&&sourceProductsPage)){ %><link rel="stylesheet" href="/public/cpanel/css/product-create.css"><% } %>
+<% if(typeof productsPage!=='undefined'&&productsPage){ %><link rel="stylesheet" href="/public/cpanel/css/async-autocomplete.css"><% } %>
+<% if((typeof brandsPage!=='undefined'&&brandsPage)||(typeof categoriesPage!=='undefined'&&categoriesPage)||(typeof discountsPage!=='undefined'&&discountsPage)){ %><link rel="stylesheet" href="/public/cpanel/css/attached-products.css"><link rel="stylesheet" href="/public/cpanel/css/async-autocomplete.css"><% } %>
 </head>
 <body class="cpanel-application" data-development="<%= isDevelopment %>">
   <a class="shell-skip" href="#main-content"><%= t('cpanel.shell.skipContent') %></a>

@@ -20,7 +20,7 @@
      <%- include('../content/translatable-field',{fieldId:'brand-seo_description',overrideHelp:t('cpanel.content.baseHelp'),fieldLabel:t('cpanel.brands.seoDescription'),lockedLabel:lockTranslations,multiline:true}) %>
     </form></section>
    <section id="brand-pane-gallery" role="tabpanel" aria-labelledby="brand-tab-gallery" data-pane="gallery" class="content-pane" hidden><%- include('../content/gallery') %></section>
-   <section id="brand-pane-products" role="tabpanel" aria-labelledby="brand-tab-products" data-pane="products" class="content-pane" hidden><h3 class="fs-6"><%= t('cpanel.brands.attachedProducts') %></h3><p id="brand-product-count"></p><p class="text-body-secondary"><%= t('cpanel.brands.productsLater') %></p></section>
+   <section id="brand-pane-products" role="tabpanel" aria-labelledby="brand-tab-products" data-pane="products" class="content-pane" hidden><h3 class="fs-6"><%= t('cpanel.brands.attachedProducts') %></h3><p id="brand-product-count"></p><%- include('attached-products') %></section>
    <p id="brand-status" role="status" class="small mt-3 mb-0"></p>
    <div id="brand-discard" class="alert alert-warning mt-3" role="alert" hidden><p><%= t('cpanel.content.discardPrompt') %></p><button id="brand-keep" type="button" class="btn btn-outline-secondary"><%= t('cpanel.users.cancel') %></button> <button id="brand-discard-confirm" type="button" class="btn btn-danger"><%= t('cpanel.content.discard') %></button></div>
   </div>

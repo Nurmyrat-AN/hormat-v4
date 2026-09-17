@@ -49,7 +49,7 @@ find('category-parent-toggle').addEventListener('click',()=>{const panel=find('c
 find('category-parent-search').addEventListener('input',()=>parentOptions());find('category-parent-prev').addEventListener('click',()=>parentOptions(parentPage-1));find('category-parent-next').addEventListener('click',()=>parentOptions(parentPage+1));
 find('category-parent-options').addEventListener('click',event=>{const button=event.target.closest('[data-parent-choice]');if(!button||button.disabled)return;activeEditor.updateBasic({parentId:button.dataset.parentChoice||null});find('category-parent-picker').hidden=true;++parentGeneration;find('category-parent-toggle').setAttribute('aria-expanded','false');find('category-parent-toggle').focus();});
 find('brand-dialog').addEventListener('hidden.bs.modal',()=>{++parentGeneration;});
-const editor=createContentEditor({root,can,labels,languages,initialBasic:()=>({parentId:current}),message,
+const editor=createContentEditor({kind:'categories',root,can,labels,languages,initialBasic:()=>({parentId:current}),message,
  productsText:row=>labels.direct+': '+(row?.directProducts??0)+' · '+labels.total+': '+(row?.totalProducts??0),
  onRender:state=>{activeEditor=state;const {editor,busy}=state;find('category-parent-toggle').textContent=pathLabel(editor.sections.basic.draft.parentId);find('category-parent-toggle').disabled=busy||!(editor.id?can.update:can.create);find('category-edit-path').textContent=labels.path+': '+pathLabel(editor.sections.basic.draft.parentId)+' / '+editor.sections.basic.draft.name;},
  onSaved:row=>{remember(row);void refresh();},

@@ -90,7 +90,7 @@ test('decimal SQL accumulation, normalized snapshot uniqueness, negative and zer
 });
 test('unsupported decoded types and kasa have no stock, deletion conservatively preserves products/references/relationships',async()=>{
  const v=await fixture();await apply(v,[zarf()]);const before=await stock(v);
- const p=(await db.query("SELECT id FROM source_products WHERE vendor_id=$1 AND source_id='p'",[v.id])).rows[0].id;await db.query('INSERT INTO products(source_product_id) VALUES($1)',[p]);
+ const p=(await db.query("SELECT id FROM source_products WHERE vendor_id=$1 AND source_id='p'",[v.id])).rows[0].id;await db.query('INSERT INTO products(source_product_id,name) VALUES($1,\'Fixture Product\')',[p]);
  await apply(v,[...['p','m','x','currency'].map(id=>({id,deleted:true})),...['kasa_islemi','z_waka','kagent','defter'].map(type=>source(type,type,{Tipi:101}))]);
  assert.deepEqual(await stock(v),before);assert.equal((await db.query('SELECT is_active FROM source_products WHERE id=$1',[p])).rows[0].is_active,true);
  assert.equal((await db.query('SELECT count(*)::int n FROM products WHERE source_product_id=$1',[p])).rows[0].n,1);

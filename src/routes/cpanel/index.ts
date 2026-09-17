@@ -1,3 +1,6 @@
+import {productsApi} from './products-api.js';
+import {productReferenceLookup} from '../../controllers/cpanel/product-reference-lookups.js';
+import {productCreateLookup} from '../../controllers/cpanel/product-create-lookups.js';
 import {sourceProductsQuery} from '../../controllers/cpanel/source-products-api.js';
 import {sourceProductsPage} from '../../controllers/cpanel/source-products.js';
 import {productsPage} from '../../controllers/cpanel/products.js';
@@ -53,6 +56,7 @@ cpanelRouter.get('/api/media/details', requireCpanelAuth, requirePermission('med
 cpanelRouter.get('/media', requireCpanelAuth, requirePermission('media.view'), shellContext, browseMedia);
 cpanelRouter.use('/api/vendors',vendorsApi);
 cpanelRouter.use('/api/brands',brandsApi);
+cpanelRouter.use('/api/products',productsApi);
 cpanelRouter.use('/api/categories',categoriesApi);
 cpanelRouter.use('/api/discounts',discountsApi);
 cpanelRouter.use('/api/html-preview',htmlPreviewApi);
@@ -77,6 +81,10 @@ cpanelRouter.get('/api/source-products',requireCpanelAuth,requirePermission('sou
 cpanelRouter.get('/api/source-products/options',requireCpanelAuth,requirePermission('source_products.view'),sourceProductsQuery('options'));
 cpanelRouter.get('/api/source-products/:id',requireCpanelAuth,requirePermission('source_products.view'),sourceProductsQuery('details'));
 cpanelRouter.get('/source-products',requireCpanelAuth,requirePermission('source_products.view'),shellContext,sourceProductsPage);
+cpanelRouter.get('/api/product-references/brands',requireCpanelAuth,productReferenceLookup('brands'));
+cpanelRouter.get('/api/product-references/categories',requireCpanelAuth,productReferenceLookup('categories'));
+cpanelRouter.get('/api/product-create/vendors',requireCpanelAuth,requirePermission('products.create'),productCreateLookup('vendors'));
+cpanelRouter.get('/api/product-create/sources',requireCpanelAuth,requirePermission('products.create'),productCreateLookup('sources'));
 cpanelRouter.get('/products',requireCpanelAuth,requirePermission('products.view'),shellContext,productsPage);
 cpanelRouter.get('/brands', requireCpanelAuth, requirePermission('brands.view'), shellContext, brands);
 cpanelRouter.get('/vendors', requireCpanelAuth, requirePermission('vendors.view'), shellContext, vendors);

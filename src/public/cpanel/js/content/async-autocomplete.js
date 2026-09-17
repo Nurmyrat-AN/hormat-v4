@@ -14,12 +14,14 @@ export class AsyncAutocomplete {
   this.input.addEventListener('input',()=>{this.cancel();this.search=this.input.value;this.show();this.options=[];this.render();this.status.textContent=this.labels.loading;this.timer=setTimeout(()=>this.load(1),this.debounce);});
   this.input.addEventListener('keydown',event=>{
    if(this.disabled||this.readOnly)return;
-   if(event.key==='Escape'){event.preventDefault();this.close();return;}
+   if(event.key==='Escape'&&!this.panel.hidden){event.preventDefault();event.stopPropagation();this.close();return;}
    if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();if(this.panel.hidden){this.open();return;}if(!this.options.length)return;this.active=this.active<0?(event.key==='ArrowDown'?0:this.options.length-1):(this.active+(event.key==='ArrowDown'?1:-1)+this.options.length)%this.options.length;this.highlight();}
    if(event.key==='Enter'&&!this.panel.hidden){event.preventDefault();if(this.active>=0&&this.options[this.active])this.choose(this.options[this.active]);}
   });
   this.clearButton.addEventListener('click',()=>{this.setValue('');this.onChange(null);this.input.focus();});
-  this.more.addEventListener('click',()=>this.load(this.nextPage));this.retry.addEventListener('click',()=>this.hydrationFailed?this.setValue(this.value):this.load(this.failedPage||1));
+  // Keep focus inside the control before the pending action hides its button.
+  // Otherwise focusout can close the dropdown and abort pagination/retry.
+  this.more.addEventListener('click',()=>{this.input.focus();this.load(this.nextPage);});this.retry.addEventListener('click',()=>{this.input.focus();if(this.hydrationFailed)this.setValue(this.value);else this.load(this.failedPage||1);});
   this.root.addEventListener('focusout',()=>{setTimeout(()=>{if(!this.root.contains(document.activeElement))this.close();},0);});
   this.outside=event=>{if(!root.contains(event.target))this.close();};document.addEventListener('pointerdown',this.outside);
  }

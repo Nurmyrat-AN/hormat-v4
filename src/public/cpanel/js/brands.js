@@ -23,7 +23,7 @@ async function request(url,method='GET',body,signal){const response=await fetch(
 function message(error){return labels[errors[error.code]??'error'];}
 async function refresh(page=pageNumber){clearTimeout(searchTimer);listRequest?.abort();listRequest=new AbortController();const generation=++listSequence;find('brands-feedback').textContent=labels.loading;try{const result=await request('/cpanel/api/brands?'+new URLSearchParams({query:find('brands-search').value.trim(),visibility:find('brands-filter').value,page:String(page)}),'GET',undefined,listRequest.signal);if(generation!==listSequence)return;rows=result.rows;pageNumber=result.page;total=result.total;render();find('brands-feedback').textContent='';}catch(error){if(error.name!=='AbortError'&&generation===listSequence)find('brands-feedback').textContent=message(error);}}
 
-const editor=createContentEditor({root,can,labels,languages,message,productsText:row=>productCount(row?.productCount??0),onSaved:()=>void refresh(),
+const editor=createContentEditor({kind:'brands',root,can,labels,languages,message,productsText:row=>productCount(row?.productCount??0),onSaved:()=>void refresh(),
  async persist({id,key,value,saved,create}){
   let body,method,url='/cpanel/api/brands';
   if(create){body={name:value.name};method='POST';}

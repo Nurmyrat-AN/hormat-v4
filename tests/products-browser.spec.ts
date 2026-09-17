@@ -1,0 +1,58 @@
+import {mkdir,writeFile,unlink} from 'node:fs/promises';
+import path from 'node:path';
+import {test,expect,type Page,type BrowserContext} from '@playwright/test';
+import {randomUUID} from 'node:crypto';
+import {pool} from '../src/database/pool.js';
+import {sourceBrowserFixture} from './fixtures/source-browser.js';
+import {bootstrapSuperuser} from '../src/cpanel/auth/bootstrap.js';
+import {sessions} from '../src/cpanel/auth/sessions.js';
+async function setup(context:BrowserContext,base:string){
+ const f=await sourceBrowserFixture(pool),user=await bootstrapSuperuser({name:'Browser',email:randomUUID()+'@example.invalid',password:randomUUID()}),session=await sessions.create(user.id);
+ await context.addCookies([{name:process.env.TEST_PRODUCTION==='1'?'__Secure-hormat_cpanel':'hormat_cpanel',value:session.token,domain:new URL(base).hostname,path:'/cpanel',secure:process.env.TEST_PRODUCTION==='1',httpOnly:true,sameSite:'Lax'},{name:'hormat_lang',value:'en',url:base}]);
+ const brand=(await pool.query("INSERT INTO brands(name,slug,is_visible) VALUES('Browser brand',$1,true) RETURNING id",[randomUUID()])).rows[0].id,category=(await pool.query("INSERT INTO categories(name,slug,is_visible) VALUES('Browser category',$1,true) RETURNING id",[randomUUID()])).rows[0].id,discount=(await pool.query("INSERT INTO discounts(name,priority) VALUES('Browser discount',5) RETURNING id")).rows[0].id;
+ const media='browser-'+randomUUID()+'.png';await mkdir('.test-media',{recursive:true});await writeFile(path.join('.test-media',media),Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8x8AAAAASUVORK5CYII=','base64'));
+ const products=[];for(let i=0;i<25;i++)products.push((await pool.query('INSERT INTO products(source_product_id,name,is_visible,brand_id,category_id,show_as_in_stock,hide_when_out_of_stock,is_placement_product) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',[f.ids[i===24?15:i===23?1:0],f.prefix+' Product '+String(i).padStart(2,'0'),i<10,i<10?brand:null,i<10?category:null,i===0,i===0,i===0])).rows[0].id);
+ await pool.query('INSERT INTO product_discounts(product_id,discount_id) VALUES($1,$2)',[products[0],discount]);
+ await pool.query("INSERT INTO product_translations(product_id,language_code,name) VALUES($1,'ru','Переведённый товар'),($1,'tm','Terjime edilen önüm')",[products[0]]);
+ await pool.query("INSERT INTO product_media(product_id,media_reference,sort_order,is_primary) VALUES($1,'missing-browser.png',0,true),($1,'other-browser.png',1,false)",[products[0]]);
+ await pool.query('INSERT INTO product_media(product_id,media_reference,sort_order,is_primary) VALUES($1,$3,0,false),($2,$3,0,true)',[products[1],products[2],media]);await pool.query("UPDATE products SET price_action='fixed',price_value=100 WHERE id=$1",[products[2]]);
+ return {...f,media,user,products,brand,category,discount,async cleanup(){await unlink(path.join('.test-media',media));await f.cleanup();for(const [table,id]of [['brands',brand],['categories',category],['discounts',discount]])await pool.query(`DELETE FROM ${table} WHERE id=$1`,[id]);await pool.query('DELETE FROM cpanel_users WHERE id=$1',[user.id]);}};
+}
+async function api(page:Page,q:Record<string,string>){return page.evaluate(async q=>{const r=await fetch('/cpanel/api/products?'+new URLSearchParams(q));return {status:r.status,...await r.json()};},q);}
+test('Products browser server search, every filter, combinations, pagination, no row multiplication and validation',async({page,context,baseURL})=>{
+ const f=await setup(context,baseURL!);try{
+ await page.goto('/cpanel/products');
+ const query={query:f.prefix};const all=await api(page,query);expect(all.status).toBe(200);expect(all.total).toBe(25);expect(all.rows).toHaveLength(20);const second=await api(page,{...query,page:'2'});expect(second.rows).toHaveLength(5);expect(new Set([...all.rows,...second.rows].map(r=>r.id)).size).toBe(25);
+ expect((await api(page,{query:f.prefix,field:'source'})).total).toBe(29);
+ expect((await api(page,{query:'00X-0',field:'source_id',vendor:f.vendors[1]})).total).toBe(3);
+ expect((await api(page,{query:f.prefix,field:'all'})).total).toBe(29);
+ const checks:[Record<string,string>,number][]=[ [{vendor:f.vendors[0]},24],[{vendor:f.vendors[1]},1],[{brand:f.brand},10],[{brand:'none'},15],[{category:f.category},10],[{category:'none'},15],[{visibility:'visible'},10],[{visibility:'hidden'},15],[{storefront:'hidden'},25],[{storefront:'visible'},0],[{stock:'in'},24],[{stock:'out'},1],[{showStock:'true'},1],[{showStock:'false'},24],[{hideStock:'true'},1],[{placement:'true'},1],[{placement:'false'},24],[{discount:f.discount},1],[{discount:'has'},1],[{discount:'none'},24],[{vendor:f.vendors[0],brand:f.brand,category:f.category,visibility:'visible',stock:'in',discount:f.discount},1] ];
+ for(const [filter,total]of checks){const result=await api(page,{...query,...filter});expect(result.status,JSON.stringify(filter)).toBe(200);expect(result.total,JSON.stringify(filter)).toBe(total);}
+ for(const bad of [{page:'0'},{vendor:'x'},{brand:'-1'},{stock:'true'},{field:'seo'},{unknown:'x'}])expect((await api(page,bad as Record<string,string>)).status).toBe(400);
+ expect(all.rows[0].discount_count).toBe(1);expect(all.rows[0].image.path).toBe('missing-browser.png');expect(all.rows[1].image).toBeNull();expect(all.rows[2].image.url).toContain(f.media);const price=(await pool.query("SELECT (100/COALESCE((SELECT f.rate FROM frontend_currencies f JOIN settings s ON s.key='marketplace.default_frontend_currency_id' AND s.value=to_jsonb(f.id::text) WHERE f.is_visible),1))::text value")).rows[0].value;expect(Number(all.rows[2].price)).toBe(Number(price));
+ }finally{await page.goto('about:blank');await f.cleanup();}
+});
+test('Products Grid/List, inline filters, autocomplete, URL/back, localization, themes and existing editor',async({page,context,baseURL})=>{
+ const f=await setup(context,baseURL!),errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));try{
+ await page.goto('/cpanel/products?query='+f.prefix);await expect(page.locator('#products-results article')).toHaveCount(20);await expect(page.locator('#products-feedback')).toHaveText('Products: 25');await expect(page.locator('[data-product-id="'+f.products[2]+'"] img')).toHaveAttribute('src',new RegExp(f.media));await expect(page.locator('#products-results')).toHaveAttribute('data-view','grid');
+ await page.locator('[data-products-view="list"]').click();await expect(page).toHaveURL(/view=list/);await expect(page.locator('#products-results')).toHaveAttribute('data-view','list');await page.locator('#products-next').click();await expect(page.locator('#products-results article')).toHaveCount(5);await page.reload();await expect(page.locator('#products-results article')).toHaveCount(5);
+ await page.locator('#products-filters-toggle').click();await page.locator('#products-filter-vendor').click();await page.locator('#products-filter-vendor').fill(f.prefix);await page.locator('#products-filter-vendor-options [role=option]').filter({hasText:f.prefix+'-1'}).click();await expect(page.locator('#products-results article')).toHaveCount(1);await expect(page.locator('#products-filter-count')).toHaveText('(1)');
+ await page.reload();await expect(page.locator('#products-filter-vendor')).toHaveValue(f.prefix+'-1');await page.locator('#products-clear').click();await expect(page.locator('#products-results article')).toHaveCount(20);await expect(page.locator('#products-query')).toHaveValue(f.prefix);
+ await page.locator('#products-filter-stock').selectOption('out');await expect(page.locator('#products-results')).toContainText('Out of stock · -4');await page.goBack();await expect(page.locator('#products-results article')).toHaveCount(20);
+ const first=page.locator('[data-product-id="'+f.products[0]+'"]');await first.locator('[data-bs-toggle]').click();await first.locator('[data-product-edit]').click();await expect(page.locator('#product-dialog')).toBeVisible();await expect(page.locator('#product-name')).toHaveValue(f.prefix+' Product 00');await page.locator('#product-dialog .modal-header .btn-close').first().click();
+ for(const [lang,title]of [['tm','Terjime edilen önüm'],['ru','Переведённый товар'],['en',f.prefix+' Product 00']]){await context.addCookies([{name:'hormat_lang',value:lang,url:baseURL!}]);await page.reload();await expect(page.locator('#products-results')).toContainText(title);expect(await page.locator('#products-browser').innerText()).not.toMatch(/cpanel\./);for(const theme of ['light','dark']){await page.evaluate(theme=>document.documentElement.setAttribute('data-bs-theme',theme),theme);await expect(page.locator('#products-results article').first()).toBeVisible();}}
+ await page.screenshot({path:'/tmp/products-browser-list.png',fullPage:true});await page.locator('[data-products-view="grid"]').click();await page.screenshot({path:'/tmp/products-browser-grid.png',fullPage:true});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
+ }finally{await page.goto('about:blank');await f.cleanup();}
+});
+test('Products browser lookup pagination/hydration and independent permissions, visibility action and CSRF',async({page,context,baseURL})=>{
+ const f=await setup(context,baseURL!);try{
+ await page.goto('/cpanel/products?query='+f.prefix);
+ const lookup=async(path:string)=>page.evaluate(async path=>{const r=await fetch('/cpanel/api/products/browser-lookups/'+path);return {status:r.status,...await r.json()};},path);
+ expect((await lookup('vendors?selected='+f.vendors[0])).options[0].value).toBe(f.vendors[0]);expect((await lookup('categories?selected='+f.category)).options[0].value).toBe(f.category);expect((await lookup('discounts?selected='+f.discount)).options[0].value).toBe(f.discount);expect((await lookup('secrets')).status).toBe(400);
+ const brands:string[]=[];try{for(let i=0;i<22;i++)brands.push((await pool.query('INSERT INTO brands(name,slug) VALUES($1,$2) RETURNING id',[f.prefix+' lookup '+i,randomUUID()])).rows[0].id);const a=await lookup('brands?query='+f.prefix),b=await lookup('brands?query='+f.prefix+'&page=2');expect(a.options).toHaveLength(20);expect(a.hasMore).toBe(true);expect(b.options).toHaveLength(2);}finally{await pool.query('DELETE FROM brands WHERE id=ANY($1::bigint[])',[brands]);}
+ await pool.query('DELETE FROM cpanel_user_permissions WHERE user_id=$1',[f.user.id]);expect((await api(page,{})).status).toBe(403);expect((await lookup('vendors')).status).toBe(403);
+ await pool.query("INSERT INTO cpanel_user_permissions(user_id,key,value) VALUES($1,'products.view','true')",[f.user.id]);expect((await api(page,{})).status).toBe(200);expect((await lookup('vendors')).status).toBe(200);await page.reload();await expect(page.locator('#product-add')).toBeDisabled();await expect(page.locator('#products-results [data-bs-toggle]')).toHaveCount(0);
+ const post=(csrf:boolean)=>page.evaluate(async({id,csrf})=>{const r=await fetch('/cpanel/api/products/'+id+'/basic',{method:'POST',headers:{'Content-Type':'application/json',...(csrf?{'X-CSRF-Token':document.querySelector<HTMLElement>('#products-app')!.dataset.csrf!}:{})},body:JSON.stringify({is_visible:false})});return r.status;},{id:f.products[0],csrf});expect(await post(true)).toBe(403);
+ await pool.query("INSERT INTO cpanel_user_permissions(user_id,key,value) VALUES($1,'products.visibility','true')",[f.user.id]);expect(await post(false)).toBe(403);expect(await post(true)).toBe(200);expect((await pool.query('SELECT is_visible FROM products WHERE id=$1',[f.products[0]])).rows[0].is_visible).toBe(false);
+ }finally{await page.goto('about:blank');await f.cleanup();}
+});

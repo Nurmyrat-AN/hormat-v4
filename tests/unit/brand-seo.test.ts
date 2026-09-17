@@ -46,10 +46,10 @@ test('SEO migration, canonical unique slug, independent field overrides, fallbac
 test('nullable products.brand_id FK and real count preserve source_product_id',async()=>{
  const vendor=(await db.query("INSERT INTO vendors(name,url,username,password_encrypted,is_active) VALUES('fixture','https://example.invalid/db','fixture',$1,false) RETURNING id",[new VendorCredentials(config.vendors.credentialsKey).encryptSecret('fixture')])).rows[0].id;
  const source=(await db.query("INSERT INTO source_products(vendor_id,source_id,name) VALUES($1,'seo-count','Count fixture') RETURNING id",[vendor])).rows[0].id;
- const a=await create(),b=await create();await db.query('INSERT INTO products(source_product_id,brand_id) VALUES($1,$2),($1,$2),($1,NULL)',[source,a]);
+ const a=await create(),b=await create();await db.query('INSERT INTO products(source_product_id,brand_id,name) VALUES($1,$2,\'Fixture Product\'),($1,$2,\'Fixture Product\'),($1,NULL,\'Fixture Product\')',[source,a]);
  assert.equal((await service.details(root,a)).row.productCount,2);assert.equal((await service.details(root,b)).row.productCount,0);
  assert.equal((await service.list(root,{})).rows.find(r=>r.id===a)?.productCount,2);
- await assert.rejects(db.query('INSERT INTO products(source_product_id,brand_id) VALUES($1,9223372036854775807)',[source]),{code:'23503'});
+ await assert.rejects(db.query('INSERT INTO products(source_product_id,brand_id,name) VALUES($1,9223372036854775807,\'Fixture Product\')',[source]),{code:'23503'});
  assert.equal((await db.query('SELECT count(*) FROM products WHERE source_product_id=$1',[source])).rows[0].count,'3');
  assert.equal((await db.query("SELECT column_name FROM information_schema.columns WHERE table_schema=$1 AND table_name='brands' AND column_name='products_count'",[schema])).rowCount,0);
 });

@@ -1,3 +1,4 @@
+import {AttachedProducts} from './content/attached-products.js';
 import {DraftState} from './content/editor-state.js';
 import {TranslatableField} from './content/translatable-field.js';
 
@@ -15,6 +16,7 @@ if(root){
  async function edit(row,button){button.disabled=true;try{open(prepare((await api('GET','/'+row.id)).row));}catch(error){find('#discount-feedback').textContent=message(error);}finally{button.disabled=false;}}
  let current=null,basic,rules,tab='basic',allowClose=false,busy=false;
  const modalElement=find('#discount-dialog'),modal=bootstrap.Modal.getOrCreateInstance(modalElement);
+ const attachments=new AttachedProducts(find('[data-attached-products]'),{kind:'discounts',csrf:root.dataset.csrf,canView:can.productView,canUpdate:can.update,onCounts:counts=>{if(current){current.productCount=counts.direct;find('#discount-product-count').textContent=labels.products+': '+counts.direct;void refresh();}}});
  const field=new TranslatableField(find('[data-translatable-field]'),{onChange:renderEditor,onSave:async()=>{
   if(!current||!can.update||busy)return;
   await persist(field.state,'translations',value=>({translations:value}));
@@ -40,7 +42,7 @@ if(root){
    find('#discount-items').append(item);
   }
  }
- function selectTab(next){if(!current&&next!=='basic')return;tab=next;all('[data-tab]').forEach(button=>{const active=button.dataset.tab===next;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});all('[data-pane]').forEach(pane=>pane.hidden=pane.dataset.pane!==next);for(const scope of ['basic','rules'])find('#discount-save-'+scope).hidden=scope!==next;}
+ function selectTab(next){if(next==='products'&&current){if(attachments.id!==current.id)attachments.reset(current.id);void attachments.load();}if(!current&&next!=='basic')return;tab=next;all('[data-tab]').forEach(button=>{const active=button.dataset.tab===next;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});all('[data-pane]').forEach(pane=>pane.hidden=pane.dataset.pane!==next);for(const scope of ['basic','rules'])find('#discount-save-'+scope).hidden=scope!==next;}
  function renderEditor(){
   if(!basic)return;
   const create=!current,editable=create?can.create:can.update;
@@ -64,7 +66,7 @@ if(root){
   find('#discount-product-count').textContent=labels.products+': '+(current?.productCount??0).toLocaleString(locale);
  }
  function open(row){
-  current=row;allowClose=false;busy=false;basic=new DraftState(row?.basic??{name:'',priority:'0',visible:false,isVisibleOnProduct:false,starts_at:'',ends_at:''});
+  attachments.reset(row?.id??null);current=row;allowClose=false;busy=false;basic=new DraftState(row?.basic??{name:'',priority:'0',visible:false,isVisibleOnProduct:false,starts_at:'',ends_at:''});
   rules=new DraftState(row?.rules??{before:{action:'removePercent',value:''},after:{action:'removeAmount',value:''}});field.reset(row?.translations??{});
   find('#discount-show-name').checked=basic.draft.isVisibleOnProduct;find('#discount-name').value=basic.draft.name;find('#discount-name').maxLength=200;find('#discount-priority').value=basic.draft.priority;find('#discount-visibility').value=basic.draft.visible?'visible':'hidden';
   for(const key of ['starts_at','ends_at']){find('#discount-'+key).value=basic.draft[key];find('#discount-no-'+key).checked=!basic.draft[key];}

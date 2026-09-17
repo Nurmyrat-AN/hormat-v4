@@ -1,0 +1,21 @@
+<% const b={field:t('cpanel.sourceProducts.field'),filters:t('cpanel.sourceProducts.filters'),clear:t('cpanel.sourceProducts.clear'),allFields:t('cpanel.users.allFields'),sourceId:t('cpanel.sourceProducts.sourceId'),previous:t('cpanel.users.previous'),next:t('cpanel.users.next'),price:t('cpanel.optionTypes.price'),changeVisibility:t('cpanel.content.changeVisibility'),storefront:t('cpanel.productBrowser.storefront'),effectiveHidden:t('cpanel.productBrowser.effectiveHidden'),noBrand:t('cpanel.productBrowser.noBrand'),noCategory:t('cpanel.productBrowser.noCategory'),hasDiscount:t('cpanel.productBrowser.hasDiscount'),noDiscount:t('cpanel.productBrowser.noDiscount'),quantity:t('cpanel.productBrowser.quantity'),yes:t('cpanel.productBrowser.yes'),no:t('cpanel.productBrowser.no'),count:t('cpanel.productBrowser.count')}; %>
+<section id="products-browser">
+<div hidden><% for(const [key,value]of Object.entries(b)){ %><span data-browser-label="<%= key %>"><%= value %></span><% } %></div>
+<div class="products-toolbar">
+<select id="products-field" class="form-select" aria-label="<%= b.field %>"><% for(const [value,label]of [['name',l.name],['source',l.source],['source_id',b.sourceId],['all',b.allFields]]){ %><option value="<%= value %>"><%= label %></option><% } %></select>
+<input id="products-query" class="form-control" type="search" maxlength="200" placeholder="<%= l.search %>" aria-label="<%= l.search %>">
+<button id="products-filters-toggle" class="btn btn-outline-secondary" aria-expanded="false" aria-controls="products-filters"><%= b.filters %> <span id="products-filter-count"></span></button>
+<div class="btn-group ms-auto"><% for(const view of ['grid','list']){ %><button class="btn btn-outline-secondary" data-products-view="<%= view %>" aria-pressed="<%= view==='grid' %>"><%= l[view] %></button><% } %></div>
+<button id="product-add" class="btn btn-success" <%= capabilities.create?'':'disabled' %>><%= l.add %></button>
+</div>
+<div id="products-filters" class="border rounded p-3 mt-3" hidden><div class="row g-3">
+<% for(const key of ['vendor','brand','category','discount']){ %><div class="col-sm-6 col-xl-3"><label for="products-filter-<%= key %>" class="form-label"><%= key==='discount'?l.discounts:l[key] %></label><%- include('async-autocomplete',{id:'products-filter-'+key,placeholder:l.all}) %>
+<% if(key!=='vendor'){ %><select class="form-select form-select-sm mt-2" data-presence="<%= key %>" aria-label="<%= key==='discount'?l.discounts:l[key] %>"><option value=""><%= l.all %></option><% if(key==='discount'){ %><option value="has"><%= b.hasDiscount %></option><% } %><option value="none"><%= key==='brand'?b.noBrand:key==='category'?b.noCategory:b.noDiscount %></option></select><% } %></div><% } %>
+<% for(const [key,label,options]of [
+['visibility',l.visibility,[['visible',l.visible],['hidden',l.hidden]]],['storefront',b.storefront,[['visible',l.visible],['hidden',b.effectiveHidden]]],['stock',l.stock,[['in',l.inStock],['out',l.outStock]]],['showStock',l.showStock,[['true',l.showStock],['false',b.quantity]]],['hideStock',l.hideStock,[['true',b.yes],['false',b.no]]],['placement',l.placement,[['true',b.yes],['false',b.no]]]
+]){ %><div class="col-sm-6 col-xl-4"><label for="products-filter-<%= key %>" class="form-label"><%= label %></label><select id="products-filter-<%= key %>" data-product-filter="<%= key %>" class="form-select"><option value=""><%= l.all %></option><% for(const [value,text]of options){ %><option value="<%= value %>"><%= text %></option><% } %></select></div><% } %>
+</div><button id="products-clear" class="btn btn-sm btn-outline-secondary mt-3"><%= b.clear %></button></div>
+<p id="products-feedback" role="status" class="small text-body-secondary my-3"></p>
+<p id="products-empty" hidden><%= l.empty %></p><div id="products-results" class="products-results" data-view="grid"></div>
+<nav class="d-flex align-items-center justify-content-center gap-3 mt-3" aria-label="<%= l.search %>"><button id="products-prev" class="btn btn-outline-secondary"><%= b.previous %></button><output id="products-page"></output><button id="products-next" class="btn btn-outline-secondary"><%= b.next %></button></nav>
+</section>

@@ -43,6 +43,6 @@ test('cross-Vendor relationships and destructive parent deletes are rejected; in
  await assert.rejects(db.query('INSERT INTO product_stocks(vendor_id,product_id,warehouse_id,stock) VALUES($1,$2,$3,2)',[first,product,warehouse]),{code:'23505'});
  await db.query('INSERT INTO product_barcodes(vendor_id,product_id,barcode) VALUES($1,$2,$3)',[first,product,'00123']);
  await assert.rejects(db.query('INSERT INTO product_barcodes(vendor_id,product_id,barcode) VALUES($1,$2,$3)',[first,product,'00123']),{code:'23505'});
- await db.query('INSERT INTO products(source_product_id) VALUES($1),($1)',[product]);assert.equal((await db.query('SELECT count(*)::int n FROM products WHERE source_product_id=$1',[product])).rows[0].n,2);
+ await db.query('INSERT INTO products(source_product_id,name) VALUES($1,\'Fixture Product\'),($1,\'Fixture Product\')',[product]);assert.equal((await db.query('SELECT count(*)::int n FROM products WHERE source_product_id=$1',[product])).rows[0].n,2);
  for(const [table,id] of [['vendors',first],['measures',measure],['currencies',currency],['warehouses',warehouse],['source_products',product]])await assert.rejects(db.query(`DELETE FROM ${table} WHERE id=$1`,[id]),(error: {code?:string})=>['23001','23503'].includes(error.code??''));
 });

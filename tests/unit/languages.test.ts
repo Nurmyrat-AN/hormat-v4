@@ -35,7 +35,7 @@ test('Unique immutable code, required metadata, integer order and server-owned v
 test('Real name/code literal search, status filters, sort and interface-only counts',async()=>{
  const a=await create('xx-a'),b=await create('xx-b');await service.mutate(root,'edit',a.code,{name:'Needle %',sort_order:3});await service.mutate(root,'edit',b.code,{name:'Needle B',sort_order:1});await service.mutate(root,'status',b.code,{is_active:true});
  assert.deepEqual((await service.list(root,{query:'Needle'})).rows.map(r=>r.code),[b.code,a.code]);assert.deepEqual((await service.list(root,{query:'%',status:'inactive'})).rows.map(r=>r.code),[a.code]);assert.equal((await service.list(root,{query:'XX-B',status:'active'})).rows[0].code,b.code);assert.equal((await service.list(root,{query:"' OR true --"})).rows.length,0);
- assert.equal((await service.details(root,'en')).row.translation_count,753);
+ assert.equal((await service.details(root,'en')).row.translation_count,801);
 });
 test('Activation/deactivation refreshes existing cache and inactive cookies fall back; translations preserved',async()=>{
  const key='xx-cache';await create(key);await db.query("INSERT INTO interface_translations VALUES($1,'frontend.title','Custom title')",[key]);await service.mutate(root,'status',key,{is_active:true});assert.equal(cache.forLanguage(key).language,key);assert.equal(cache.translate(key,'frontend.title'),'Custom title');assert.equal(cache.translate(key,'cpanel.title'),cache.translate(cache.defaultLanguage,'cpanel.title'));

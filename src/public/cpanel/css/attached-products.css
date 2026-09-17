@@ -1,0 +1,4 @@
+[data-attached-products] .media-reference-preview{position:relative;width:48px;height:48px;display:grid;place-items:center;overflow:hidden;border-radius:6px;background:var(--shell-bg);color:var(--shell-muted)}
+[data-attached-products] .media-reference-preview img{position:absolute;width:100%;height:100%;object-fit:contain}
+[data-attached-products] .media-reference-preview svg{width:32px;height:32px;fill:none;stroke:currentColor;stroke-width:1.7}
+[data-attached-products] article>.flex-grow-1{min-width:0;overflow-wrap:anywhere}

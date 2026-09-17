@@ -1,0 +1,16 @@
+INSERT INTO interface_translations(language_code,translation_key,translation_value) VALUES
+('tm','cpanel.products.searchDiscount','Arzanladyş gözle...'),
+('ru','cpanel.products.searchDiscount','Поиск скидки...'),
+('en','cpanel.products.searchDiscount','Search Discount...'),
+('tm','cpanel.products.discountAttached','Arzanladyş goşuldy.'),
+('ru','cpanel.products.discountAttached','Скидка прикреплена.'),
+('en','cpanel.products.discountAttached','Discount attached.'),
+('tm','cpanel.products.discountAttachFailed','Arzanladyşy goşmak başartmady. Gaýtadan synanyşyň.'),
+('ru','cpanel.products.discountAttachFailed','Не удалось прикрепить скидку. Повторите попытку.'),
+('en','cpanel.products.discountAttachFailed','Failed to attach Discount. Please try again.'),
+('tm','cpanel.products.discountDetached','Arzanladyş önümden aýryldy.'),
+('ru','cpanel.products.discountDetached','Скидка откреплена.'),
+('en','cpanel.products.discountDetached','Discount detached.'),
+('tm','cpanel.products.noAvailableDiscounts','Goşup boljak arzanladyş ýok.'),
+('ru','cpanel.products.noAvailableDiscounts','Нет доступных скидок.'),
+('en','cpanel.products.noAvailableDiscounts','No available Discounts.');

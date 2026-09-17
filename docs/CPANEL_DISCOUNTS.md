@@ -83,3 +83,8 @@ Basic and Rules Save buttons now share the right-aligned modal footer with Close
 Basic Information includes optional `isVisibleOnProduct` (false by default in new previews and fixtures), with localized label/help. Basic dirty/save/reopen retain its page-memory value. This is presentation metadata only, independent of availability, priority, dates and Before/After rules. Future persistence: `discounts.is_visible_on_product BOOLEAN NOT NULL DEFAULT FALSE`; not implemented now. Migration 044 supplies two keys/six real tm/ru/en values and is applied to development. The approved footer remains unchanged.
 
 Focused browser check passed: default false, toggle/revert dirty state, Basic Save/reopen, Rules/priority/date values unchanged. No unrelated regression was run.
+
+
+## Attached Products activation
+
+The formerly informational Products tab now uses the shared [Attached Products contract](ATTACHED_PRODUCTS.md). Existing foreign keys/relationship rows remain authoritative. Search and attached lists are paginated; Attach/Detach persist immediately, and Brand/Category reassignment requires confirmation. This supersedes the earlier attachment-deferred statements only.

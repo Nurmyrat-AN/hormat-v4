@@ -109,3 +109,8 @@ Focused tests: tests/unit/brand-seo.test.ts and tests/brand-seo.spec.ts. Histori
 ## Current amendment: independent SEO tab
 
 This supersedes the SEO-in-Basic placement and Basic PATCH fields in the extension above. Final tabs: **Basic Information / SEO / Gallery / Products**. SEO's Save uses `PATCH /cpanel/api/brands/:id/seo` with changed slug/seo_title/seo_description only; existing brands.update and CSRF apply. Basic PATCH rejects SEO fields. Safe responses separate `row.seo` from `row.basic`. Each section keeps its own unsaved/saved baseline; Name/SEO Title/SEO Description translations remain independently inline. Create unlocks SEO after receiving a real ID. No schema change beyond migration 038's Save SEO interface translations.
+
+
+## Attached Products activation
+
+The formerly informational Products tab now uses the shared [Attached Products contract](ATTACHED_PRODUCTS.md). Existing foreign keys/relationship rows remain authoritative. Search and attached lists are paginated; Attach/Detach persist immediately, and Brand/Category reassignment requires confirmation. This supersedes the earlier attachment-deferred statements only.

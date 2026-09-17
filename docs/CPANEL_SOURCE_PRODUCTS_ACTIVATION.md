@@ -36,3 +36,11 @@ Implementation: source-products/query.ts (validation), repository.ts (SQL/read-o
 Deferred: source mutations, Create Storefront Product from Source, Storefront Products backend/redesign. Stop after activation.
 
 Final browser run: **2/2 PASS** on compiled production server: real PostgreSQL page/details, same Grid/List state, URL refresh/back, leading-zero barcode query, connection filter, exact stock/counts, normal actor API denial/view-only access, and absent source mutation route. Temporary inactive Vendors and dependent fixtures were cleaned up. Final total: **9/9 selected checks PASS** (3 source SQL + 2 fresh migration/localization + 2 navigation + 2 browser); live tm/ru/en verification also passed. No known blocking issue.
+
+## Storefront Products tab activation
+
+Source details now lists real Products by immutable `products.source_product_id`, with count, Primary image/placeholder, Name, visibility and Brand/Category labels. Pages are server-backed (20 rows, stable Name/ID order). GET `/cpanel/api/products/source/:id/products` requires both source_products.view and products.view; no new business schema or source mutation is introduced.
+
+Create New Product uses products.create and skips source selection. The shared Product dialog opens with fixed Source, prefilled Name and locked dependent tabs until actual Create; opening writes nothing. Edit uses the same dialog, shown for products.view + products.update. The Source modal is restored and its list/count refreshed on Product editor close; the main Source browser refreshes too. No attachment, detachment, move, source change or deletion controls exist.
+
+Verification: two focused production browser/API tests passed (one-to-many, pagination, Create/Edit and refreshed return, no-write-on-open, scoped reads and permissions); two fresh-migration/localization tests passed. Build and current-database localization integrity passed. Migration 078 adds only Create New Product in tm/ru/en. No unrelated historical regression was run.

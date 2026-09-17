@@ -3,3 +3,4 @@
 @media(max-width:767px){.source-list-head{display:none!important}.source-results{grid-template-columns:1fr}#source-products-page[data-view=list] .source-card{grid-template-columns:repeat(3,minmax(0,1fr));font-size:.8rem;padding:.8rem}.source-details{grid-template-columns:1fr;gap:.2rem}.source-details dd{margin-bottom:.75rem}.source-toolbar>.form-select{flex:1 1 130px}.source-toolbar>.form-control{flex-basis:100%;order:3}.source-tabs .nav-link{font-size:.85rem}}
 
 .source-cell .badge{align-self:flex-start;max-width:100%;white-space:normal;text-align:start;line-height:1.4;font-weight:500}.source-card.is-inactive .source-name{color:var(--bs-secondary-color)}.source-card.is-inactive{box-shadow:none}.source-stock strong{font-variant-numeric:tabular-nums}
+.source-product-image{width:48px;height:48px;flex-shrink:0}.source-product-image .media-reference-preview{height:48px}#source-pane-products article>.flex-grow-1{min-width:0;overflow-wrap:anywhere}
