@@ -42,7 +42,10 @@ export class DurableSync {
       const missing=await this.repository.missing(id,needs);
       if(!missing.length)break;
       if(!context.transport.fetchDocuments)throw new SyncFailure('MISSING_DEPENDENCY');
-      const ids=[...new Set(missing.map(n=>n.id))];if(ids.length>10000)throw new SyncFailure('BATCH_LIMIT');
+      // The reserved main currency is supplied by settings, not necessarily a z_walyuta document.
+      // Fetch both identities in the same bounded round, including after bootstrap/checkpoint resume.
+      const ids=[...new Set(missing.flatMap(n=>n.table==='currencies' && n.id==='z_walyuta-1'
+        ? [n.id,'ayar_umum-1'] : [n.id]))];if(ids.length>10000)throw new SyncFailure('BATCH_LIMIT');
       let added=0;
       // Requests stay bounded; never fetch one document per request.
       for(let offset=0;offset<ids.length;offset+=500){

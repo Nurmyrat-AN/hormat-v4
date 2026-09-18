@@ -230,3 +230,23 @@ test('dependency reads beyond stream checkpoint do not contribute their future e
  await apply(v,[zarf([invoice(201,[line('future')])])],transport);
  assert.deepEqual((await state(v)).vendor[0].date_last_operation,(before.vendor as any)[0].date_last_operation);
 });
+
+
+test('late main-currency settings recover a resumed batch without resetting its checkpoint',async()=>{
+ const v=await vendor();await apply(v,[source('earlier','unsupported')],emptyTransport,'saved-position');
+ let available=false;const requests:string[][]=[];
+ const docs=[source('ayar_umum-1','ayar_umum',{paraAdi:'TMT',uytgeme_tarih:'2099-01-01T00:00:00Z'}),source('m','olc_umum',{Adi:'Unit'})];
+ const transport={...emptyTransport,async fetchDocuments(ids:string[]){requests.push(ids);return docs.filter(d=>ids.includes(d.id)&&(available||d.id!=='ayar_umum-1'));}};
+ const before=await state(v);
+ await assert.rejects(apply(v,[product()],transport,'next-position'),{code:'MISSING_DEPENDENCY'});
+ assert.deepEqual(await state(v),before);
+ available=true;
+ const restarted=new DurableSync(repository);
+ assert.equal(await restarted.prepare(v,transport,signal),'saved-position');
+ await restarted.process(v.id,{results:[product()],last_seq:'next-position'},signal,{vendor:v,transport,since:'saved-position'});
+ assert.ok(requests.some(ids=>ids.includes('z_walyuta-1')&&ids.includes('ayar_umum-1')));
+ const row=(await db.query('SELECT c.source_id,c.name FROM source_products p JOIN currencies c ON c.id=p.currency_id WHERE p.vendor_id=$1',[v.id])).rows[0];
+ assert.deepEqual(row,{source_id:'z_walyuta-1',name:'TMT'});
+ const current=(await new VendorSyncRepository(db).get(v.id))!;assert.equal(current.last_sequence,'next-position');
+ assert.deepEqual((await state(v)).vendor && (await db.query('SELECT date_last_operation FROM vendors WHERE id=$1',[v.id])).rows[0].date_last_operation,new Date('2020-01-01Z'));
+});
