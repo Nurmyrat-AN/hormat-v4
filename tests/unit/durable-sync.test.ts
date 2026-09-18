@@ -232,21 +232,25 @@ test('dependency reads beyond stream checkpoint do not contribute their future e
 });
 
 
-test('late main-currency settings recover a resumed batch without resetting its checkpoint',async()=>{
+test('missing main currency uses Vendor name, then real settings preserve currency ID and product relationships',async()=>{
  const v=await vendor();await apply(v,[source('earlier','unsupported')],emptyTransport,'saved-position');
- let available=false;const requests:string[][]=[];
- const docs=[source('ayar_umum-1','ayar_umum',{paraAdi:'TMT',uytgeme_tarih:'2099-01-01T00:00:00Z'}),source('m','olc_umum',{Adi:'Unit'})];
- const transport={...emptyTransport,async fetchDocuments(ids:string[]){requests.push(ids);return docs.filter(d=>ids.includes(d.id)&&(available||d.id!=='ayar_umum-1'));}};
- const before=await state(v);
- await assert.rejects(apply(v,[product()],transport,'next-position'),{code:'MISSING_DEPENDENCY'});
- assert.deepEqual(await state(v),before);
- available=true;
- const restarted=new DurableSync(repository);
- assert.equal(await restarted.prepare(v,transport,signal),'saved-position');
- await restarted.process(v.id,{results:[product()],last_seq:'next-position'},signal,{vendor:v,transport,since:'saved-position'});
+ const requests:string[][]=[];
+ const transport={...emptyTransport,async fetchDocuments(ids:string[]){requests.push(ids);return ids.includes('m')?[source('m','olc_umum',{Adi:'Unit'})]:[];}};
+ await apply(v,[product()],transport,'next-position');
  assert.ok(requests.some(ids=>ids.includes('z_walyuta-1')&&ids.includes('ayar_umum-1')));
- const row=(await db.query('SELECT c.source_id,c.name FROM source_products p JOIN currencies c ON c.id=p.currency_id WHERE p.vendor_id=$1',[v.id])).rows[0];
- assert.deepEqual(row,{source_id:'z_walyuta-1',name:'TMT'});
- const current=(await new VendorSyncRepository(db).get(v.id))!;assert.equal(current.last_sequence,'next-position');
- assert.deepEqual((await state(v)).vendor && (await db.query('SELECT date_last_operation FROM vendors WHERE id=$1',[v.id])).rows[0].date_last_operation,new Date('2020-01-01Z'));
+ const currency=()=>db.query("SELECT id,name FROM currencies WHERE vendor_id=$1 AND source_id='z_walyuta-1'",[v.id]);
+ const initial=(await currency()).rows[0];assert.equal(initial.name,'Fixture.walyuta1');
+ const relation=(await db.query('SELECT currency_id FROM source_products WHERE vendor_id=$1',[v.id])).rows[0].currency_id;assert.equal(relation,initial.id);
+ await apply(v,[source('ayar_umum-1','ayar_umum',{paraAdi:'TMT'})]);
+ assert.deepEqual((await currency()).rows[0],{id:initial.id,name:'TMT'});
+ assert.equal((await db.query('SELECT currency_id FROM source_products WHERE vendor_id=$1',[v.id])).rows[0].currency_id,relation);
+});
+test('main currency exception does not cover other missing references or failed source requests',async()=>{
+ for(const scenario of ['otherCurrency','missingMeasure','network']){
+  const v=await vendor(),before=await state(v);
+  const transport={...emptyTransport,async fetchDocuments(){if(scenario==='network')throw new SyncFailure('CONNECTION');return [];}};
+  await assert.rejects(apply(v,[product('p',scenario==='otherCurrency'?{idFiyatWalyutasy:'other'}:{})],transport),{code:scenario==='network'?'CONNECTION':'MISSING_DEPENDENCY'});
+  assert.deepEqual(await state(v),before);
+  assert.equal((await db.query('SELECT count(*)::int n FROM currencies WHERE vendor_id=$1',[v.id])).rows[0].n,0);
+ }
 });

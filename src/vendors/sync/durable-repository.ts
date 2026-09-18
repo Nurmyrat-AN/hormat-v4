@@ -33,7 +33,7 @@ export class DurableSyncRepository {
     return result;
   }
   /** One Vendor row lock serializes duplicate workers/processes and document snapshot replacement. */
-  async commit(vendor:SyncVendor,docs:SourceDocument[],signal:AbortSignal,checkpoint?:{since:string|number;next:string|number;operationDates?:string[]},bootstrap=false):Promise<void>{
+  async commit(vendor:SyncVendor,docs:SourceDocument[],signal:AbortSignal,checkpoint?:{since:string|number;next:string|number;operationDates?:string[]},bootstrap=false,mainCurrencyFallback=false):Promise<void>{
     const c=await this.database.connect();
     try{
       await c.query('BEGIN');
@@ -44,6 +44,10 @@ export class DurableSyncRepository {
       if(checkpoint && (sequence??'0')!==String(checkpoint.since))throw new SyncFailure('STALE_CHECKPOINT');
       signal.throwIfAborted();
       await this.references(c,vendor.id,docs);
+      // Read the current Vendor name under its existing lock. Never overwrite a real currency.
+      if(mainCurrencyFallback)await c.query(`INSERT INTO currencies(vendor_id,source_id,name)
+        SELECT id,'z_walyuta-1',name||'.walyuta1' FROM vendors WHERE id=$1
+        ON CONFLICT(vendor_id,source_id) DO NOTHING`,[vendor.id]);
       await this.products(c,vendor.id,docs);
       const effects=new Map<number,Effect>((await c.query("SELECT type_code,warehouse_1_effect,warehouse_2_effect FROM transaction_types WHERE transaction_kind='fatura'")).rows.map(r=>[r.type_code,r]));
       await this.stocks(c,vendor.id,docs,effects);

@@ -97,3 +97,8 @@ Only the original stream batch contributes. On-demand dependency documents can b
 For the already initialized development Vendor, a one-time date-only historical scan may initialize the field only when its final CouchDB sequence exactly equals the captured committed PostgreSQL checkpoint and the source binding/checkpoint are revalidated under the Vendor lock. A changed boundary cancels that backfill. It does not reset checkpoint, recompute stock, or change date_last_sync. See [amendment verification](../SOURCE_OPERATION_DATE_REPORT.md).
 
 Explicit reset to text zero now uses the same reference prepass as a null checkpoint, then normal durable replay. See [architecture section 47](ARCHITECTURE.md#47-vendor-reset-sync-data).
+
+
+## Approved missing main-currency exception (2026-09-18)
+
+When a product requires `z_walyuta-1`, successful dependency reads that find neither the currency nor `ayar_umum-1` may create the vendor-scoped currency with the current Vendor name plus `.walyuta1`. This is the only approved placeholder exception. It is inserted inside the normal batch transaction with conflict-do-nothing; no exchange rate is invented. Missing other references and network/decode failures still block atomically. Later settings UPSERT the real name while retaining the currency ID and Product references. No schema change or checkpoint reset is required.

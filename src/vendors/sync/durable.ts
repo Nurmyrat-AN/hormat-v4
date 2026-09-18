@@ -30,9 +30,11 @@ export class DurableSync {
     if(!context)throw new SyncFailure('PROCESSING');
     const docs=decodeBatch(batch), all=new Map(docs.map(d=>[d.id,d]));
     const effects=await this.repository.effects();
+    let mainCurrencyFallback=false;
     // zarf -> product -> currency/measure is at most two dependency edges.
     for(let round=0;round<3;round++){
       const supplied=new Set<string>();
+      if(mainCurrencyFallback)supplied.add(JSON.stringify(['currencies','z_walyuta-1']));
       for(const d of all.values()){
         if(d.deleted)continue;
         const table=d.type==='urun'?'source_products':referenceTables[d.type as keyof typeof referenceTables];
@@ -56,9 +58,14 @@ export class DurableSync {
           if(!all.has(d.id)){all.set(d.id,d);added++;}
         }
       }
+      // Owner-approved exception only for the reserved main currency, after successful source reads.
+      if(missing.some(n=>n.table==='currencies'&&n.id==='z_walyuta-1') &&
+        ![...all.values()].some(d=>!d.deleted&&(d.type==='ayar_umum'||d.type==='z_walyuta'&&d.id==='z_walyuta-1'))){
+        mainCurrencyFallback=true;added++;
+      }
       if(!added)throw new SyncFailure('MISSING_DEPENDENCY');
     }
-    await this.repository.commit(context.vendor,[...all.values()],signal,{since:context.since,next:batch.last_seq,operationDates:sourceEditTimestamps(docs)});
+    await this.repository.commit(context.vendor,[...all.values()],signal,{since:context.since,next:batch.last_seq,operationDates:sourceEditTimestamps(docs)},false,mainCurrencyFallback);
     return processBatch(id,batch,signal);
   };
 }
